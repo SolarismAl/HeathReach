@@ -42,6 +42,28 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     
     const initAuth = async () => {
       try {
+        // First, try to restore Firebase user session
+        console.log('AuthContext: Attempting to restore Firebase user session...');
+        try {
+          const { getFirebaseAuth } = await import('../services/firebase');
+          const auth = await getFirebaseAuth();
+          
+          // Wait for Firebase auth state to be restored
+          await new Promise((resolve) => {
+            const unsubscribe = auth.onAuthStateChanged((firebaseUser: any) => {
+              console.log('AuthContext: Firebase auth state changed:', firebaseUser ? 'User found' : 'No user');
+              if (firebaseUser) {
+                console.log('AuthContext: Firebase user restored:', firebaseUser.uid);
+                setFirebaseUser(firebaseUser);
+              }
+              unsubscribe();
+              resolve(firebaseUser);
+            });
+          });
+        } catch (firebaseError) {
+          console.error('AuthContext: Error restoring Firebase user:', firebaseError);
+        }
+        
         // Check for stored token and user data
         const token = await apiService.getStoredToken();
         const userData = await apiService.getStoredUserData();
@@ -62,16 +84,19 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
             console.log('AuthContext: Token invalid, clearing stored data');
             await apiService.logout();
             setUser(null);
+            setFirebaseUser(null);
           }
         } else {
           console.log('AuthContext: No stored auth, showing get started screen');
           setUser(null);
+          setFirebaseUser(null);
         }
       } catch (error) {
         console.error('Error checking stored auth:', error);
         // Clear any invalid stored data
         await apiService.logout();
         setUser(null);
+        setFirebaseUser(null);
       } finally {
         setLoading(false);
       }
@@ -123,18 +148,27 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const signInWithGoogle = async (googleToken?: string) => {
     setLoading(true);
     try {
-      // Authenticate with Firebase Google
-      const firebaseResult = await CustomAuthService.signInWithGoogle();
-      setFirebaseUser(firebaseResult.user);
-
-      // Send ID token to backend
-      const response = await apiService.loginWithGoogle(firebaseResult.idToken);
-      if (response.success && response.data) {
-        setUser(response.data.user);
-        console.log('AuthContext: Google login successful', response.data.user.role);
-      } else {
-        throw new Error(response.message || 'Google login failed');
+      console.log('AuthContext: Starting Google sign in with token:', !!googleToken);
+      
+      if (!googleToken) {
+        throw new Error('Google access token is required');
       }
+      
+      // Authenticate with backend using Google access token
+      const authResult = await CustomAuthService.signInWithGoogle(googleToken);
+      console.log('AuthContext: Google auth result:', authResult);
+      
+      // Set user data from auth result
+      const userData = authResult.user;
+      setUser(userData);
+      setFirebaseUser(authResult.user);
+      
+      // Store user data and token
+      await AsyncStorage.setItem('userToken', authResult.idToken);
+      await AsyncStorage.setItem('userData', JSON.stringify(userData));
+      
+      console.log('AuthContext: Google login successful, user set with role:', userData.role);
+      
     } catch (error) {
       console.error('Google sign in error:', error);
       throw error;

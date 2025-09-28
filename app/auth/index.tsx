@@ -23,6 +23,8 @@ export default function LoginScreen() {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [showGoogleModal, setShowGoogleModal] = useState(false);
+  const [emailLoading, setEmailLoading] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
   const { signInWithEmail, signInWithGoogle, loading } = useAuth();
   const { toast, showError, showSuccess, hideToast } = useToast();
 
@@ -36,6 +38,7 @@ export default function LoginScreen() {
     console.log('Email:', email);
     console.log('Password:', password ? 'Present' : 'Missing');
 
+    setEmailLoading(true);
     try {
       console.log('Calling signInWithEmail...');
       await signInWithEmail(email.trim(), password);
@@ -48,11 +51,19 @@ export default function LoginScreen() {
     } catch (error: any) {
       console.error('Login failed:', error);
       showError(error.message || 'Login failed');
+    } finally {
+      setEmailLoading(false);
     }
   };
 
   const handleGoogleLogin = async () => {
+    setGoogleLoading(true);
     setShowGoogleModal(true);
+  };
+
+  const handleGoogleModalClose = () => {
+    setShowGoogleModal(false);
+    setGoogleLoading(false);
   };
 
   const navigateToRegister = () => {
@@ -113,12 +124,12 @@ export default function LoginScreen() {
             </View>
 
             <TouchableOpacity
-              style={[styles.loginButton, loading && styles.loginButtonDisabled]}
+              style={[styles.loginButton, emailLoading && styles.loginButtonDisabled]}
               onPress={handleLogin}
-              disabled={loading}
+              disabled={emailLoading}
             >
               <Text style={styles.loginButtonText}>
-                {loading ? 'Logging In...' : 'Sign In'}
+                {emailLoading ? 'Logging In...' : 'Sign In'}
               </Text>
             </TouchableOpacity>
 
@@ -129,13 +140,13 @@ export default function LoginScreen() {
             </View>
 
             <TouchableOpacity
-              style={[styles.googleButton, loading && styles.googleButtonDisabled]}
+              style={[styles.googleButton, googleLoading && styles.googleButtonDisabled]}
               onPress={handleGoogleLogin}
-              disabled={loading}
+              disabled={googleLoading}
             >
               <Ionicons name="logo-google" size={20} color="#DB4437" style={styles.googleIcon} />
               <Text style={styles.googleButtonText}>
-                {loading ? 'Connecting...' : 'Continue with Google'}
+                {googleLoading ? 'Connecting...' : 'Continue with Google'}
               </Text>
             </TouchableOpacity>
 
@@ -159,7 +170,7 @@ export default function LoginScreen() {
       
       <GoogleSignInModal
         visible={showGoogleModal}
-        onClose={() => setShowGoogleModal(false)}
+        onClose={handleGoogleModalClose}
         mode="signin"
       />
       

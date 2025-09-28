@@ -163,27 +163,42 @@ export class CustomAuthService {
       console.log('Sign out completed');
     } catch (error) {
       console.error('Sign Out Error:', error);
-      throw error;
     }
   }
 
   static async getCurrentUser(): Promise<any | null> {
     try {
+      // First try to get the current Firebase user
+      try {
+        const { getFirebaseAuth } = await import('./firebase');
+        const auth = await getFirebaseAuth();
+        const firebaseUser = auth.currentUser;
+        
+        if (firebaseUser) {
+          console.log('CustomAuthService: Found Firebase user:', firebaseUser.uid);
+          return firebaseUser;
+        }
+      } catch (firebaseError) {
+        console.error('CustomAuthService: Error getting Firebase user:', firebaseError);
+      }
+      
+      // Fallback to stored user data with mock getIdToken method
       const userData = await AsyncStorage.getItem('user_data');
       const token = await AsyncStorage.getItem('firebase_id_token');
       
       if (userData && token) {
         const user = JSON.parse(userData);
         return {
-          uid: user.user_id,
+          ...user,
+          uid: user.user_id || user.uid,
           email: user.email,
-          displayName: user.name,
           getIdToken: async () => token
         };
       }
+      
       return null;
     } catch (error) {
-      console.error('Get current user error:', error);
+      console.error('Error getting current user:', error);
       return null;
     }
   }
@@ -206,9 +221,67 @@ export class CustomAuthService {
     return () => {};
   }
 
-  // Dummy method for Google sign-in
-  static async signInWithGoogle(): Promise<{ user: any; idToken: string }> {
-    throw new Error('Google Sign-In is currently only supported on web. Please use email/password authentication.');
+  // Google sign-in method
+  static async signInWithGoogle(accessToken?: string): Promise<{ user: any; idToken: string }> {
+    try {
+      console.log('=== CUSTOM AUTH GOOGLE SIGN-IN ===');
+      console.log('Access token provided:', !!accessToken);
+      
+      if (!accessToken) {
+        throw new Error('Google access token is required');
+      }
+      
+      // Send Google access token to backend for verification and user creation/login
+      const response = await fetch('http://127.0.0.1:8000/api/auth/google', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+        body: JSON.stringify({
+          idToken: accessToken  // Backend expects 'idToken' field
+        })
+      });
+
+      console.log('Google auth response status:', response.status);
+      const data = await response.json();
+      console.log('Google auth response data:', data);
+
+      if (data.success && data.data?.token) {
+        console.log('Google authentication successful');
+        
+        // Store tokens and user data
+        await AsyncStorage.setItem('auth_token', data.data.token);
+        await AsyncStorage.setItem('firebase_id_token', data.data.firebase_token || data.data.token);
+        await AsyncStorage.setItem('user_data', JSON.stringify(data.data.user));
+        
+        console.log('Google user data:', data.data.user);
+        console.log('Google user role:', data.data.user.role);
+        
+        return {
+          user: {
+            user_id: data.data.user.user_id,
+            name: data.data.user.name,
+            email: data.data.user.email,
+            role: data.data.user.role,
+            contact_number: data.data.user.contact_number,
+            address: data.data.user.address,
+            is_active: data.data.user.is_active,
+            created_at: data.data.user.created_at,
+            updated_at: data.data.user.updated_at,
+            // Firebase-style fields for compatibility
+            uid: data.data.user.user_id,
+            displayName: data.data.user.name,
+          },
+          idToken: data.data.firebase_token || data.data.token
+        };
+      } else {
+        throw new Error(data.message || 'Google authentication failed');
+      }
+    } catch (error: any) {
+      console.error('Google auth error:', error);
+      throw error;
+    }
   }
 }
 

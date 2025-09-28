@@ -19,18 +19,39 @@ export default function GoogleSignInModal({ visible, onClose, mode }: GoogleSign
   const [loading, setLoading] = useState(false);
   const { signInWithGoogle } = useAuth();
   
+  const redirectUri = makeRedirectUri({
+    scheme: 'healthreach',
+  });
+  
+  console.log('Google OAuth Redirect URI:', redirectUri);
+  console.log('Google Client ID:', process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID);
+  
   const [request, response, promptAsync] = Google.useAuthRequest({
     clientId: process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID,
-    redirectUri: makeRedirectUri({
-      scheme: 'healthreach',
-      path: 'auth'
-    }),
+    redirectUri: redirectUri,
+    scopes: ['openid', 'profile', 'email'],
   });
 
   React.useEffect(() => {
+    console.log('Google Auth Response:', response);
+    
     if (response?.type === 'success') {
       const { authentication } = response;
-      handleGoogleAuthSuccess(authentication?.accessToken);
+      console.log('Google Authentication object:', authentication);
+      console.log('Access Token:', authentication?.accessToken);
+      console.log('ID Token:', authentication?.idToken);
+      
+      // Prefer ID token if available, fallback to access token
+      const tokenToUse = authentication?.idToken || authentication?.accessToken;
+      console.log('Using token:', tokenToUse ? 'ID Token' : 'Access Token');
+      
+      handleGoogleAuthSuccess(tokenToUse);
+    } else if (response?.type === 'error') {
+      console.error('Google Auth Error:', response.error);
+      Alert.alert(
+        'Google Sign-In Error', 
+        `Error: ${response.error?.message || 'Unknown error'}\n\nDetails: ${JSON.stringify(response.error, null, 2)}`
+      );
     }
   }, [response]);
 
@@ -42,9 +63,45 @@ export default function GoogleSignInModal({ visible, onClose, mode }: GoogleSign
 
     setLoading(true);
     try {
-      // For mobile, we need to use Firebase Auth directly, not the web version
-      await signInWithGoogle(); // Don't pass accessToken, let Firebase handle it
-      onClose();
+      console.log('GoogleSignInModal: Getting Google user info with access token');
+      
+      // Get user info from Google using the access token
+      const userInfoResponse = await fetch(`https://www.googleapis.com/oauth2/v2/userinfo?access_token=${accessToken}`);
+      const userInfo = await userInfoResponse.json();
+      
+      console.log('Google user info:', userInfo);
+      
+      // Use Firebase Auth to sign in with Google and get a proper Firebase ID token
+      console.log('GoogleSignInModal: Signing in with Firebase using Google credentials');
+      
+      try {
+        // Import Firebase auth functions
+        const { GoogleAuthProvider, signInWithCredential } = await import('firebase/auth');
+        const { getFirebaseAuth } = await import('../services/firebase');
+        
+        // Create Google credential with access token
+        const credential = GoogleAuthProvider.credential(null, accessToken);
+        
+        // Sign in with Firebase using Google credential
+        const auth = await getFirebaseAuth();
+        const userCredential = await signInWithCredential(auth, credential);
+        
+        // Get Firebase ID token
+        const firebaseIdToken = await userCredential.user.getIdToken();
+        console.log('GoogleSignInModal: Got Firebase ID token from Google credential');
+        
+        // Use the Firebase ID token for backend authentication
+        await signInWithGoogle(firebaseIdToken);
+        onClose();
+        
+      } catch (firebaseError) {
+        console.error('Firebase Google sign-in error:', firebaseError);
+        // Fallback: try with access token directly
+        console.log('GoogleSignInModal: Fallback - using access token directly');
+        await signInWithGoogle(accessToken);
+        onClose();
+      }
+      
     } catch (error: any) {
       console.error('Google Auth Error:', error);
       Alert.alert('Error', error.message || 'Google authentication failed');
