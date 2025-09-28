@@ -29,8 +29,8 @@ export default function PatientDashboard() {
     try {
       const [profileResponse, appointmentsResponse, notificationsResponse] = await Promise.all([
         apiService.getProfile(),
-        apiService.getAppointments({ status: 'confirmed', limit: 3 }),
-        apiService.getNotifications({ limit: 5 }),
+        apiService.getAppointments(),
+        apiService.getNotifications(),
       ]);
 
       if (profileResponse.success) {
@@ -75,6 +75,36 @@ export default function PatientDashboard() {
       minute: '2-digit',
       hour12: true,
     });
+  };
+
+  const getStatusBadgeStyle = (status: string) => {
+    switch (status) {
+      case 'confirmed':
+        return styles.confirmedBadge;
+      case 'pending':
+        return styles.pendingBadge;
+      case 'cancelled':
+        return styles.cancelledBadge;
+      case 'completed':
+        return styles.completedBadge;
+      default:
+        return styles.pendingBadge;
+    }
+  };
+
+  const getStatusTextStyle = (status: string) => {
+    switch (status) {
+      case 'confirmed':
+        return styles.confirmedText;
+      case 'pending':
+        return styles.pendingText;
+      case 'cancelled':
+        return styles.cancelledText;
+      case 'completed':
+        return styles.completedText;
+      default:
+        return styles.pendingText;
+    }
   };
 
   return (
@@ -162,22 +192,34 @@ export default function PatientDashboard() {
               <View style={styles.appointmentHeader}>
                 <View style={styles.appointmentDate}>
                   <Text style={styles.appointmentDateText}>
-                    {formatDate(appointment.appointment_date )}
+                    {formatDate(appointment.date)}
                   </Text>
                   <Text style={styles.appointmentTimeText}>
-                    {formatTime(appointment.appointment_time)}
+                    {formatTime(appointment.time)}
                   </Text>
                 </View>
-                <View style={[styles.statusBadge, styles.confirmedBadge]}>
-                  <Text style={styles.statusText}>Confirmed</Text>
+                <View style={[styles.statusBadge, getStatusBadgeStyle(appointment.status)]}>
+                  <Text style={[styles.statusText, getStatusTextStyle(appointment.status)]}>
+                    {appointment.status.charAt(0).toUpperCase() + appointment.status.slice(1)}
+                  </Text>
                 </View>
               </View>
               <Text style={styles.appointmentService}>
-                {appointment.service?.name || 'General Consultation'}
+                {appointment.service?.service_name || 'General Consultation'}
               </Text>
               <Text style={styles.appointmentLocation}>
-                {appointment.health_center?.name || 'Health Center'}
+                📍 {appointment.health_center?.name || 'Health Center'}
               </Text>
+              {appointment.health_center?.address && (
+                <Text style={styles.appointmentAddress}>
+                  {appointment.health_center.address}
+                </Text>
+              )}
+              {appointment.service?.price && (
+                <Text style={styles.appointmentPrice}>
+                  💰 ₱{appointment.service.price.toLocaleString()}
+                </Text>
+              )}
             </View>
           ))
         ) : (
@@ -375,10 +417,30 @@ const styles = StyleSheet.create({
   confirmedBadge: {
     backgroundColor: '#E8F5E8',
   },
+  pendingBadge: {
+    backgroundColor: '#FFF3E0',
+  },
+  cancelledBadge: {
+    backgroundColor: '#FFEBEE',
+  },
+  completedBadge: {
+    backgroundColor: '#E3F2FD',
+  },
   statusText: {
     fontSize: 10,
     fontWeight: '600',
+  },
+  confirmedText: {
     color: '#2E7D32',
+  },
+  pendingText: {
+    color: '#F57C00',
+  },
+  cancelledText: {
+    color: '#D32F2F',
+  },
+  completedText: {
+    color: '#1976D2',
   },
   appointmentService: {
     fontSize: 16,
@@ -389,6 +451,18 @@ const styles = StyleSheet.create({
   appointmentLocation: {
     fontSize: 14,
     color: '#666',
+    marginBottom: 4,
+  },
+  appointmentAddress: {
+    fontSize: 12,
+    color: '#999',
+    marginBottom: 4,
+    fontStyle: 'italic',
+  },
+  appointmentPrice: {
+    fontSize: 12,
+    color: '#4A90E2',
+    fontWeight: '600',
   },
   notificationCard: {
     flexDirection: 'row',

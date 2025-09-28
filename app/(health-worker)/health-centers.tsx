@@ -13,10 +13,11 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import apiService from '../../services/api';
-import { HealthCenter } from '../../types';
+import { HealthCenter, Service } from '../../types';
 
 export default function HealthCentersScreen() {
   const [healthCenters, setHealthCenters] = useState<HealthCenter[]>([]);
+  const [services, setServices] = useState<Service[]>([]);
   const [refreshing, setRefreshing] = useState(false);
   const [loading, setLoading] = useState(true);
   const [showAddModal, setShowAddModal] = useState(false);
@@ -32,20 +33,32 @@ export default function HealthCentersScreen() {
   });
 
   useEffect(() => {
-    loadHealthCenters();
+    loadData();
   }, []);
 
-  const loadHealthCenters = async () => {
+  const loadData = async () => {
     try {
-      const response = await apiService.getHealthCenters();
-      if (response.success) {
-        setHealthCenters(response.data || []);
+      const [centersResponse, servicesResponse] = await Promise.all([
+        apiService.getHealthCenters(),
+        apiService.getServices(),
+      ]);
+
+      if (centersResponse.success) {
+        setHealthCenters(centersResponse.data || []);
+      }
+
+      if (servicesResponse.success) {
+        setServices(servicesResponse.data || []);
       }
     } catch (error) {
-      Alert.alert('Error', 'Failed to load health centers');
+      Alert.alert('Error', 'Failed to load data');
     } finally {
       setLoading(false);
     }
+  };
+
+  const loadHealthCenters = async () => {
+    await loadData();
   };
 
   const onRefresh = async () => {
@@ -87,7 +100,7 @@ export default function HealthCentersScreen() {
         Alert.alert('Success', 'Health center created successfully');
         setShowAddModal(false);
         resetForm();
-        loadHealthCenters();
+        loadData();
       } else {
         Alert.alert('Error', response.message || 'Failed to create health center');
       }
@@ -119,7 +132,7 @@ export default function HealthCentersScreen() {
         setShowEditModal(false);
         setEditingCenter(null);
         resetForm();
-        loadHealthCenters();
+        loadData();
       } else {
         Alert.alert('Error', response.message || 'Failed to update health center');
       }
@@ -142,7 +155,7 @@ export default function HealthCentersScreen() {
               const response = await apiService.deleteHealthCenter(center.health_center_id);
               if (response.success) {
                 Alert.alert('Success', 'Health center deleted successfully');
-                loadHealthCenters();
+                loadData();
               } else {
                 Alert.alert('Error', response.message || 'Failed to delete health center');
               }
@@ -168,18 +181,31 @@ export default function HealthCentersScreen() {
     setShowEditModal(true);
   };
 
-  const renderHealthCenter = ({ item }: { item: HealthCenter }) => (
-    <View style={styles.centerCard}>
-      <View style={styles.centerHeader}>
-        <View style={styles.centerInfo}>
-          <Text style={styles.centerName}>{item.name}</Text>
-          <View style={[styles.statusBadge, item.is_active ? styles.activeBadge : styles.inactiveBadge]}>
-            <Text style={[styles.statusText, item.is_active ? styles.activeText : styles.inactiveText]}>
-              {item.is_active ? 'Active' : 'Inactive'}
-            </Text>
+  const getServicesCount = (healthCenterId: string) => {
+    return services.filter(service => service.health_center_id === healthCenterId).length;
+  };
+
+  const renderHealthCenter = ({ item }: { item: HealthCenter }) => {
+    const servicesCount = getServicesCount(item.health_center_id);
+    
+    return (
+      <View style={styles.centerCard}>
+        <View style={styles.centerHeader}>
+          <View style={styles.centerInfo}>
+            <Text style={styles.centerName}>{item.name}</Text>
+            <View style={styles.centerBadges}>
+              <View style={[styles.statusBadge, item.is_active ? styles.activeBadge : styles.inactiveBadge]}>
+                <Text style={[styles.statusText, item.is_active ? styles.activeText : styles.inactiveText]}>
+                  {item.is_active ? 'Active' : 'Inactive'}
+                </Text>
+              </View>
+              <View style={styles.servicesBadge}>
+                <Ionicons name="medical-outline" size={12} color="#4A90E2" />
+                <Text style={styles.servicesCount}>{servicesCount} Service{servicesCount !== 1 ? 's' : ''}</Text>
+              </View>
+            </View>
           </View>
         </View>
-      </View>
 
       <View style={styles.centerDetails}>
         <View style={styles.detailItem}>
@@ -226,7 +252,8 @@ export default function HealthCentersScreen() {
         </TouchableOpacity>
       </View>
     </View>
-  );
+    );
+  };
 
   const HealthCenterModal = ({ visible, onClose, onSave, title }: any) => (
     <Modal 
@@ -446,11 +473,30 @@ const styles = StyleSheet.create({
     color: '#333',
     marginBottom: 8,
   },
+  centerBadges: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
   statusBadge: {
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 12,
     alignSelf: 'flex-start',
+  },
+  servicesBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#E3F2FD',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
+    gap: 4,
+  },
+  servicesCount: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#4A90E2',
   },
   activeBadge: {
     backgroundColor: '#E8F5E8',

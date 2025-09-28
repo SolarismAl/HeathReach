@@ -78,6 +78,12 @@ export default function PatientLayout() {
           headerTitle: 'My Profile',
         }}
       />
+      <Tabs.Screen
+        name="about"
+        options={{
+          href: null, // This hides the tab from the tab bar
+        }}
+      />
     </Tabs>
   );
 }

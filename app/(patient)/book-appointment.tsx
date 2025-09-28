@@ -121,13 +121,13 @@ export default function BookAppointmentScreen() {
     try {
       console.log('Loading booked appointments for date:', selectedDate);
       const response = await apiService.getAppointments({
-        service_id: selectedService.service_id,
+        health_center_id: selectedService.health_center_id,
         appointment_date: selectedDate,
         status: ['confirmed', 'pending'] // Don't show cancelled/completed as booked
       });
       
       if (response.success && response.data) {
-        const bookedTimes = response.data.map((appointment: any) => appointment.appointment_time);
+        const bookedTimes = response.data.map((appointment: any) => appointment.time);
         setBookedSlots(bookedTimes);
         console.log('Booked time slots for', selectedDate, ':', bookedTimes);
         
@@ -172,37 +172,42 @@ export default function BookAppointmentScreen() {
 
       console.log('Booking appointment with data:', appointmentData);
       const response = await apiService.createAppointment(appointmentData);
-
-      if (response.success) {
-        // Schedule reminder notification 1 hour before appointment
-        const appointmentDateTime = new Date(`${selectedDate}T${selectedTime}`);
-        const reminderTime = new Date(appointmentDateTime.getTime() - 60 * 60 * 1000); // 1 hour before
+      console.log('Booking response:', response);
+      console.log('Response success:', response.success);
+      console.log('Response type:', typeof response.success);
+      
+      if (response && response.success === true) {
+        console.log('Booking successful, showing alert...');
         
-        if (reminderTime > new Date()) {
-          try {
-            await notificationService.notifyAppointmentReminder(
-              response.data?.id?.toString() || 'temp-id',
-              'Appointment Reminder',
-              `Your appointment at ${selectedHealthCenter.name} is in 1 hour`,
-              reminderTime
-            );
-          } catch (notificationError) {
-            console.warn('Failed to schedule notification:', notificationError);
-          }
-        }
-
+        // Show success alert immediately
         Alert.alert(
-          'Success', 
-          `Appointment booked successfully!\n\nDetails:\n• Health Center: ${selectedHealthCenter.name}\n• Service: ${selectedService.service_name}\n• Date: ${formatDate(selectedDate)}\n• Time: ${formatTime(selectedTime)}`,
+          '🎉 Booking Successful!',
+          `Your appointment has been booked successfully!\n\n📅 Date: ${formatDate(selectedDate)}\n⏰ Time: ${formatTime(selectedTime)}\n🏥 Health Center: ${selectedHealthCenter?.name}\n💊 Service: ${selectedService?.service_name}\n\nYou will receive a confirmation once the health worker reviews your appointment.`,
           [
-            { text: 'OK', onPress: () => router.back() }
+            {
+              text: '📋 View My Appointments',
+              onPress: () => {
+                resetForm();
+                router.replace('/(patient)/appointments');
+              },
+              style: 'default'
+            },
+            {
+              text: '✅ Got it!',
+              onPress: () => {
+                resetForm();
+                router.back();
+              },
+              style: 'cancel'
+            }
           ]
         );
         
         // Reset form after successful booking
         resetForm();
       } else {
-        Alert.alert('Error', response.message || 'Failed to book appointment');
+        console.log('Booking failed:', response);
+        Alert.alert('❌ Booking Failed', response?.message || 'Failed to book appointment. Please try again.');
       }
     } catch (error: any) {
       console.error('Appointment booking error:', error);
@@ -261,21 +266,21 @@ export default function BookAppointmentScreen() {
       {/* Booking Progress Indicator */}
       <View style={styles.progressContainer}>
         <View style={styles.progressStep}>
-          <View style={[styles.progressDot, selectedHealthCenter && styles.progressDotCompleted]}>
+          <View style={[styles.progressDot, selectedHealthCenter ? styles.progressDotCompleted : {}]}>
             <Text style={styles.progressNumber}>1</Text>
           </View>
           <Text style={styles.progressLabel}>Health Center</Text>
         </View>
         <View style={styles.progressLine} />
         <View style={styles.progressStep}>
-          <View style={[styles.progressDot, selectedService && styles.progressDotCompleted]}>
+          <View style={[styles.progressDot, selectedService ? styles.progressDotCompleted : {}]}>
             <Text style={styles.progressNumber}>2</Text>
           </View>
           <Text style={styles.progressLabel}>Service</Text>
         </View>
         <View style={styles.progressLine} />
         <View style={styles.progressStep}>
-          <View style={[styles.progressDot, selectedDate && styles.progressDotCompleted]}>
+          <View style={[styles.progressDot, selectedDate ? styles.progressDotCompleted : {}]}>
             <Text style={styles.progressNumber}>3</Text>
           </View>
           <Text style={styles.progressLabel}>Date & Time</Text>
@@ -296,7 +301,7 @@ export default function BookAppointmentScreen() {
               style={styles.selector}
               onPress={() => setShowHealthCenters(true)}
             >
-              <Text style={[styles.selectorText, !selectedHealthCenter && styles.placeholderText]}>
+              <Text style={[styles.selectorText, !selectedHealthCenter ? styles.placeholderText : {}]}>
                 {selectedHealthCenter?.name || 'Choose a health center'}
               </Text>
               <Ionicons name="chevron-down" size={20} color="#666" />
@@ -304,7 +309,7 @@ export default function BookAppointmentScreen() {
             {selectedHealthCenter && (
               <View style={styles.selectedInfo}>
                 <Ionicons name="location" size={16} color="#666" />
-                <Text style={styles.selectedInfoText}>{selectedHealthCenter.location}</Text>
+                <Text style={styles.selectedInfoText}>{selectedHealthCenter.address || selectedHealthCenter.location}</Text>
               </View>
             )}
           </>
@@ -322,11 +327,11 @@ export default function BookAppointmentScreen() {
         ) : (
           <>
             <TouchableOpacity
-              style={[styles.selector, !selectedHealthCenter && styles.selectorDisabled]}
+              style={[styles.selector, !selectedHealthCenter ? styles.selectorDisabled : {}]}
               onPress={() => selectedHealthCenter && setShowServices(true)}
               disabled={!selectedHealthCenter}
             >
-              <Text style={[styles.selectorText, !selectedService && styles.placeholderText]}>
+              <Text style={[styles.selectorText, !selectedService ? styles.placeholderText : {}]}>
                 {selectedService?.service_name || 'Choose a service'}
               </Text>
               <Ionicons name="chevron-down" size={20} color="#666" />
@@ -354,12 +359,12 @@ export default function BookAppointmentScreen() {
         <Text style={styles.sectionTitle}>Select Date</Text>
         <Calendar
           onDayPress={(day) => setSelectedDate(day.dateString)}
-          markedDates={{
+          markedDates={selectedDate ? {
             [selectedDate]: {
               selected: true,
               selectedColor: '#4A90E2',
             },
-          }}
+          } : {}}
           minDate={getMinDate()}
           theme={{
             selectedDayBackgroundColor: '#4A90E2',
@@ -380,11 +385,11 @@ export default function BookAppointmentScreen() {
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Select Time</Text>
         <TouchableOpacity
-          style={[styles.selector, !selectedDate && styles.selectorDisabled]}
+          style={[styles.selector, !selectedDate ? styles.selectorDisabled : {}]}
           onPress={() => selectedDate && setShowTimeSlots(true)}
           disabled={!selectedDate}
         >
-          <Text style={[styles.selectorText, !selectedTime && styles.placeholderText]}>
+          <Text style={[styles.selectorText, !selectedTime ? styles.placeholderText : {}]}>
             {selectedTime ? formatTime(selectedTime) : 'Choose a time slot'}
           </Text>
           <Ionicons name="chevron-down" size={20} color="#666" />
@@ -415,7 +420,7 @@ export default function BookAppointmentScreen() {
               <View style={styles.summaryText}>
                 <Text style={styles.summaryLabel}>Health Center</Text>
                 <Text style={styles.summaryValue}>{selectedHealthCenter.name}</Text>
-                <Text style={styles.summarySubtext}>{selectedHealthCenter.location}</Text>
+                <Text style={styles.summarySubtext}>{selectedHealthCenter.address || selectedHealthCenter.location}</Text>
               </View>
             </View>
             
@@ -445,7 +450,7 @@ export default function BookAppointmentScreen() {
       {/* Book Button */}
       <View style={styles.bookSection}>
         <TouchableOpacity
-          style={[styles.bookButton, loading && styles.bookButtonDisabled]}
+          style={[styles.bookButton, loading ? styles.bookButtonDisabled : {}]}
           onPress={handleBookAppointment}
           disabled={loading || !selectedHealthCenter || !selectedService || !selectedDate || !selectedTime}
         >
@@ -479,7 +484,7 @@ export default function BookAppointmentScreen() {
                     }}
                   >
                     <Text style={styles.modalItemTitle}>{center.name}</Text>
-                    <Text style={styles.modalItemSubtitle}>{center.location}</Text>
+                    <Text style={styles.modalItemSubtitle}>{center.address || center.location}</Text>
                     {center.contact_number && (
                       <Text style={styles.modalItemDescription}>{center.contact_number}</Text>
                     )}
@@ -564,9 +569,9 @@ export default function BookAppointmentScreen() {
                     key={time}
                     style={[
                       styles.timeSlot,
-                      selectedTime === time && styles.timeSlotSelected,
-                      isBooked && styles.timeSlotBooked,
-                      !isAvailable && styles.timeSlotDisabled
+                      selectedTime === time ? styles.timeSlotSelected : {},
+                      isBooked ? styles.timeSlotBooked : {},
+                      !isAvailable ? styles.timeSlotDisabled : {}
                     ]}
                     onPress={() => {
                       if (isAvailable && !isBooked) {
@@ -578,9 +583,9 @@ export default function BookAppointmentScreen() {
                   >
                     <Text style={[
                       styles.timeSlotText,
-                      selectedTime === time && styles.timeSlotTextSelected,
-                      isBooked && styles.timeSlotTextBooked,
-                      !isAvailable && styles.timeSlotTextDisabled
+                      selectedTime === time ? styles.timeSlotTextSelected : {},
+                      isBooked ? styles.timeSlotTextBooked : {},
+                      !isAvailable ? styles.timeSlotTextDisabled : {}
                     ]}>
                       {formatTime(time)}
                     </Text>

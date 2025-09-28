@@ -7,6 +7,7 @@ import {
   TouchableOpacity,
   RefreshControl,
   Alert,
+  ActivityIndicator,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import apiService from '../../services/api';
@@ -23,15 +24,21 @@ export default function AppointmentHistoryScreen() {
     loadAppointments();
   }, [filter]);
 
-  const loadAppointments = async () => {
+  const loadAppointments = async (showLoading = true) => {
     try {
+      if (showLoading) setLoading(true);
       const params = filter === 'all' ? {} : { status: filter };
+      console.log('Loading appointments with filter:', filter, 'params:', params);
       const response = await apiService.getAppointments(params);
+      console.log('Appointments response:', response);
       
       if (response.success) {
+        console.log('Appointments data:', response.data);
+        console.log('Filtered appointments count:', response.data?.length || 0);
         setAppointments(response.data || []);
       }
     } catch (error) {
+      console.error('Load appointments error:', error);
       Alert.alert('Error', 'Failed to load appointments');
     } finally {
       setLoading(false);
@@ -40,7 +47,7 @@ export default function AppointmentHistoryScreen() {
 
   const onRefresh = async () => {
     setRefreshing(true);
-    await loadAppointments();
+    await loadAppointments(false);
     setRefreshing(false);
   };
 
@@ -121,8 +128,11 @@ export default function AppointmentHistoryScreen() {
     return appointment.status === 'pending' || appointment.status === 'confirmed';
   };
 
-  const renderAppointment = ({ item }: { item: Appointment }) => (
-    <View style={styles.appointmentCard}>
+  const renderAppointment = ({ item }: { item: Appointment }) => {
+    console.log('Rendering appointment:', item);
+    console.log('Service data:', item.service);
+    return (
+      <View style={styles.appointmentCard}>
       <View style={styles.appointmentHeader}>
         <View style={styles.dateTimeContainer}>
           <Text style={styles.dateText}>
@@ -142,14 +152,42 @@ export default function AppointmentHistoryScreen() {
       </View>
 
       <View style={styles.appointmentBody}>
-        <Text style={styles.serviceName}>General Consultation</Text>
-        <Text style={styles.healthCenter}>{item.health_center?.name || 'Health Center'}</Text>
-        <Text style={styles.address}>{item.health_center?.location || 'Location not specified'}</Text>
+        <View style={styles.serviceHeader}>
+          <Ionicons name="medical" size={18} color="#4A90E2" />
+          <Text style={styles.serviceName}>
+            {item.service?.service_name || 'General Consultation'}
+          </Text>
+        </View>
+        
+        <View style={styles.healthCenterInfo}>
+          <Ionicons name="location" size={16} color="#4A90E2" />
+          <Text style={styles.healthCenter}>
+            {item.health_center?.name || 'Health Center'}
+          </Text>
+        </View>
+        
+        {item.health_center?.address && (
+          <Text style={styles.address}>{item.health_center.address}</Text>
+        )}
+        
+        {item.service?.price && (
+          <View style={styles.priceInfo}>
+            <Ionicons name="card" size={16} color="#4A90E2" />
+            <Text style={styles.priceText}>₱{item.service.price.toLocaleString()}</Text>
+          </View>
+        )}
+        
+        {item.service?.duration_minutes && (
+          <View style={styles.durationInfo}>
+            <Ionicons name="time" size={16} color="#666" />
+            <Text style={styles.durationText}>{item.service.duration_minutes} minutes</Text>
+          </View>
+        )}
         
         {item.user && (
           <View style={styles.healthWorkerInfo}>
             <Ionicons name="person" size={16} color="#666" />
-            <Text style={styles.healthWorkerText}>{item.user.name}</Text>
+            <Text style={styles.healthWorkerText}>Patient: {item.user.name}</Text>
           </View>
         )}
 
@@ -173,7 +211,8 @@ export default function AppointmentHistoryScreen() {
         </View>
       )}
     </View>
-  );
+    );
+  };
 
   const filterButtons = [
     { key: 'all', label: 'All' },
@@ -199,7 +238,10 @@ export default function AppointmentHistoryScreen() {
                 styles.filterButton,
                 filter === item.key && styles.filterButtonActive
               ]}
-              onPress={() => setFilter(item.key as any)}
+              onPress={() => {
+                console.log('Filter button pressed:', item.key);
+                setFilter(item.key as any);
+              }}
             >
               <Text style={[
                 styles.filterButtonText,
@@ -213,27 +255,34 @@ export default function AppointmentHistoryScreen() {
       </View>
 
       {/* Appointments List */}
-      <FlatList
-        data={appointments}
-        keyExtractor={(item) => item.appointment_id.toString()}
-        renderItem={renderAppointment}
-        refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-        }
-        contentContainerStyle={styles.listContainer}
-        ListEmptyComponent={
-          <View style={styles.emptyState}>
-            <Ionicons name="calendar-outline" size={64} color="#CCC" />
-            <Text style={styles.emptyStateTitle}>No Appointments Found</Text>
-            <Text style={styles.emptyStateText}>
-              {filter === 'all' 
-                ? "You haven't booked any appointments yet."
-                : `No ${filter} appointments found.`
-              }
-            </Text>
-          </View>
-        }
-      />
+      {loading ? (
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color="#4A90E2" />
+          <Text style={styles.loadingText}>Loading appointments...</Text>
+        </View>
+      ) : (
+        <FlatList
+          data={appointments}
+          keyExtractor={(item) => item.appointment_id.toString()}
+          renderItem={renderAppointment}
+          refreshControl={
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+          }
+          contentContainerStyle={styles.listContainer}
+          ListEmptyComponent={
+            <View style={styles.emptyState}>
+              <Ionicons name="calendar-outline" size={64} color="#CCC" />
+              <Text style={styles.emptyStateTitle}>No Appointments Found</Text>
+              <Text style={styles.emptyStateText}>
+                {filter === 'all' 
+                  ? "You haven't booked any appointments yet."
+                  : `No ${filter} appointments found.`
+                }
+              </Text>
+            </View>
+          }
+        />
+      )}
     </View>
   </ProtectedRoute>
 );
@@ -317,22 +366,57 @@ const styles = StyleSheet.create({
   appointmentBody: {
     marginBottom: 12,
   },
+  serviceHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 8,
+    backgroundColor: '#F0F8FF',
+    padding: 8,
+    borderRadius: 6,
+  },
   serviceName: {
     fontSize: 18,
     fontWeight: 'bold',
     color: '#333',
+    marginLeft: 6,
+  },
+  healthCenterInfo: {
+    flexDirection: 'row',
+    alignItems: 'center',
     marginBottom: 4,
   },
   healthCenter: {
     fontSize: 16,
     color: '#4A90E2',
     fontWeight: '600',
-    marginBottom: 2,
+    marginLeft: 4,
   },
   address: {
     fontSize: 14,
     color: '#666',
     marginBottom: 8,
+    marginLeft: 20,
+  },
+  priceInfo: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 4,
+  },
+  priceText: {
+    fontSize: 14,
+    color: '#4A90E2',
+    fontWeight: '600',
+    marginLeft: 4,
+  },
+  durationInfo: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  durationText: {
+    fontSize: 14,
+    color: '#666',
+    marginLeft: 4,
   },
   serviceText: {
     fontSize: 14,
@@ -403,5 +487,16 @@ const styles = StyleSheet.create({
     color: '#666',
     textAlign: 'center',
     lineHeight: 20,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingVertical: 64,
+  },
+  loadingText: {
+    fontSize: 16,
+    color: '#666',
+    marginTop: 16,
   },
 });

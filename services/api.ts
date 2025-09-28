@@ -26,7 +26,7 @@ class ApiService {
     
     this.api = axios.create({
       baseURL: this.baseURL,
-      timeout: 30000, // Increased timeout to 30 seconds
+      timeout: 10000, // Reduced timeout to 10 seconds for faster feedback
       headers: {
         'Content-Type': 'application/json',
         'Accept': 'application/json',
@@ -173,7 +173,7 @@ class ApiService {
         console.log('No current user - checking stored tokens');
       }
       
-      // Fallback to stored Firebase ID token
+      // Fallback to stored Firebase ID token (prioritize this for API calls)
       const firebaseToken = await AsyncStorage.getItem('firebase_id_token');
       console.log('Stored Firebase ID token:', firebaseToken ? `Present (length: ${firebaseToken.length})` : 'NULL');
       if (firebaseToken) {
@@ -181,12 +181,27 @@ class ApiService {
         return firebaseToken;
       }
       
-      // Last fallback to custom JWT token
+      // Last fallback to custom JWT token - but try to exchange it first
       const customToken = await AsyncStorage.getItem('auth_token');
       console.log('Stored custom token:', customToken ? `Present (length: ${customToken.length})` : 'NULL');
       if (customToken) {
-        console.log('Using custom JWT token for API call');
-        return customToken;
+        console.log('Found custom token, attempting to exchange for ID token...');
+        try {
+          const { signInWithCustomToken } = await import('firebase/auth');
+          const { getFirebaseAuth } = await import('./firebase');
+          
+          const auth = await getFirebaseAuth();
+          const userCredential = await signInWithCustomToken(auth, customToken);
+          const idToken = await userCredential.user.getIdToken();
+          
+          console.log('Successfully exchanged custom token for fresh ID token');
+          await this.setFirebaseIdToken(idToken);
+          return idToken;
+        } catch (exchangeError) {
+          console.error('Failed to exchange custom token:', exchangeError);
+          console.log('Using custom JWT token for API call as fallback');
+          return customToken;
+        }
       }
       
       console.log('No valid token found - returning NULL');
@@ -344,14 +359,41 @@ class ApiService {
       console.log('Registration response status:', response.status);
       console.log('Registration response data:', response.data);
       
-      if (response.data.success && response.data.data?.token) {
+      if (response.data.success && response.data.data?.token && response.data.data?.user) {
         console.log('Registration successful, storing token and user data');
-        // Store token and user data for immediate login
-        await this.setToken(response.data.data.token);
-        await this.setUserData(response.data.data.user);
-        return response.data;
+        
+        // The token from backend is a Firebase custom token, we need to exchange it for an ID token
+        try {
+          console.log('Exchanging custom token for ID token after registration...');
+          const { signInWithCustomToken } = await import('firebase/auth');
+          const { getFirebaseAuth } = await import('./firebase');
+          
+          // Sign in with the custom token to get an ID token
+          const auth = await getFirebaseAuth();
+          const userCredential = await signInWithCustomToken(auth, response.data.data.token);
+          const idToken = await userCredential.user.getIdToken();
+          
+          console.log('Successfully exchanged custom token for ID token after registration');
+          
+          // Store both tokens
+          await AsyncStorage.setItem('auth_token', response.data.data.token); // Custom token
+          await AsyncStorage.setItem('firebase_id_token', idToken); // ID token for API calls
+          await AsyncStorage.setItem('user_data', JSON.stringify(response.data.data.user));
+          
+        } catch (tokenError) {
+          console.error('Failed to exchange custom token after registration:', tokenError);
+          // Fallback: store the custom token as both
+          await AsyncStorage.setItem('auth_token', response.data.data.token);
+          await AsyncStorage.setItem('firebase_id_token', response.data.data.token);
+          await AsyncStorage.setItem('user_data', JSON.stringify(response.data.data.user));
+        }
+        
+        return {
+          success: true,
+          message: response.data.message,
+          data: response.data.data
+        };
       }
-      
       console.log('Registration response without token:', response.data);
       return response.data;
     } catch (error: any) {
@@ -660,21 +702,19 @@ class ApiService {
     }
   }
 
-  // Appointments
-  async getAppointments(params?: any): Promise<ApiResponse<any[]>> {
+  async getAppointments(params?: any): Promise<ApiResponse<Appointment[]>> {
     try {
+      // Use real Firestore endpoint - data structure is now fixed
       const response = await this.api.get('/appointments', { params });
       return response.data;
-    } catch (error: any) {
+    } catch (error) {
       console.error('Get appointments error:', error);
       return {
         success: false,
-        message: error.response?.data?.message || 'Failed to fetch appointments',
-        data: []
+        message: 'Failed to fetch appointments'
       };
     }
   }
-
   async createAppointment(data: any): Promise<ApiResponse<any>> {
     try {
       const response = await this.api.post('/appointments', data);
@@ -779,6 +819,7 @@ class ApiService {
   // Notifications
   async getNotifications(params?: any): Promise<ApiResponse<any[]>> {
     try {
+      // Use real Firestore endpoint - data structure should work now
       const response = await this.api.get('/notifications', { params });
       return response.data;
     } catch (error: any) {
@@ -966,7 +1007,6 @@ class ApiService {
       };
     }
   }
-
 }
 
 // Create and export a singleton instance

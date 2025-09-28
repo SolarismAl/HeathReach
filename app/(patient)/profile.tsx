@@ -8,6 +8,7 @@ import {
   Alert,
   TextInput,
   Modal,
+  ActivityIndicator,
 } from 'react-native';
 import { router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -25,46 +26,88 @@ export default function ProfileScreen() {
     name: '',
     email: '',
     phone: '',
+    address: '',
   });
 
   useEffect(() => {
     loadProfile();
   }, [authUser]);
 
+  useEffect(() => {
+    console.log('User state changed:', user);
+    
+    // Update form whenever user data changes
+    if (user) {
+      console.log('Updating editForm with user data:', user);
+      const newFormData = {
+        name: user.name || '',
+        email: user.email || '',
+        phone: user.contact_number || '',
+        address: user.address || '',
+      };
+      console.log('Setting editForm to:', newFormData);
+      setEditForm(newFormData);
+    }
+  }, [user]);
+
+  // Add useEffect to track editForm changes
+  useEffect(() => {
+    console.log('EditForm state updated:', editForm);
+  }, [editForm]);
+
   const loadProfile = async () => {
     try {
+      console.log('Loading profile... AuthUser:', authUser);
+      
       // First try to get profile from backend API
       const response = await apiService.getProfile();
+      console.log('Profile API response:', response);
+      
       if (response.success && response.data) {
-        setUser(response.data);
-        setEditForm({
-          name: response.data.name || '',
-          email: response.data.email || '',
-          phone: response.data.contact_number || '',
+        console.log('Setting user from API:', response.data);
+        console.log('Full response structure:', JSON.stringify(response, null, 2));
+        
+        // Handle nested user data structure - check if data has a user property
+        let userData;
+        if (response.data && typeof response.data === 'object' && 'user' in response.data) {
+          userData = (response.data as any).user;
+          console.log('Found nested user data:', userData);
+        } else {
+          userData = response.data;
+          console.log('Using direct data:', userData);
+        }
+        console.log('Extracted user data:', userData);
+        console.log('User data fields:', {
+          name: userData?.name,
+          email: userData?.email,
+          contact_number: userData?.contact_number,
+          address: userData?.address,
+          role: userData?.role
         });
+        
+        setUser(userData);
+        console.log('User state set to:', userData);
+        // Form will be populated by useEffect when user state changes
       } else {
+        console.log('API failed, using AuthContext user:', authUser);
         // Fallback to AuthContext user data
         if (authUser) {
           setUser(authUser);
-          setEditForm({
-            name: authUser.name || '',
-            email: authUser.email || '',
-            phone: authUser.contact_number || '',
-          });
+          // Form will be populated by useEffect when user state changes
+        } else {
+          console.log('No user data available');
         }
       }
     } catch (error) {
       console.error('Profile loading error:', error);
       // Fallback to AuthContext user data
       if (authUser) {
+        console.log('Error occurred, using AuthContext user:', authUser);
         setUser(authUser);
-        setEditForm({
-          name: authUser.name || '',
-          email: authUser.email || '',
-          phone: authUser.contact_number || '',
-        });
+        // Form will be populated by useEffect when user state changes
       } else {
-        Alert.alert('Error', 'Failed to load profile');
+        console.log('No fallback user data available');
+        Alert.alert('Error', 'Failed to load profile. Please try logging in again.');
       }
     } finally {
       setLoading(false);
@@ -73,15 +116,42 @@ export default function ProfileScreen() {
 
   const handleUpdateProfile = async () => {
     try {
-      const response = await apiService.updateProfile(editForm);
+      console.log('=== PROFILE UPDATE ATTEMPT ===');
+      console.log('Form data being sent:', editForm);
+      console.log('Current user state:', user);
+      
+      // Map frontend field names to backend field names
+      const backendData = {
+        name: editForm.name,
+        email: editForm.email,
+        contact_number: editForm.phone, // Map 'phone' to 'contact_number'
+        address: editForm.address,
+      };
+      console.log('Mapped data for backend:', backendData);
+      
+      const response = await apiService.updateProfile(backendData);
+      console.log('Update profile response:', response);
+      
       if (response.success && response.data) {
-        setUser(response.data);
+        // Handle nested user data structure - same logic as loadProfile
+        let userData;
+        if (response.data && typeof response.data === 'object' && 'user' in response.data) {
+          userData = (response.data as any).user;
+          console.log('Update: Found nested user data:', userData);
+        } else {
+          userData = response.data;
+          console.log('Update: Using direct data:', userData);
+        }
+        
+        setUser(userData);
+        console.log('Update: User state set to:', userData);
         setEditModalVisible(false);
         Alert.alert('Success', 'Profile updated successfully');
       } else {
         Alert.alert('Error', response.message || 'Failed to update profile');
       }
     } catch (error: any) {
+      console.error('Update profile error:', error);
       Alert.alert('Error', error.message || 'Failed to update profile');
     }
   };
@@ -110,12 +180,16 @@ export default function ProfileScreen() {
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
-        <Ionicons name="person" size={50} color="#4A90E2" />
+        <ActivityIndicator size="large" color="#4A90E2" />
         <Text style={styles.loadingText}>Loading profile...</Text>
       </View>
     );
   }
 
+  console.log('Rendering profile with user:', user);
+  console.log('User name for display:', user?.name);
+  console.log('User email for display:', user?.email);
+  
   return (
     <ScrollView style={styles.container}>
       {/* Profile Header */}
@@ -123,8 +197,8 @@ export default function ProfileScreen() {
         <View style={styles.avatarContainer}>
           <Ionicons name="person" size={50} color="#FFFFFF" />
         </View>
-        <Text style={styles.userName}>{user?.name}</Text>
-        <Text style={styles.userEmail}>{user?.email}</Text>
+        <Text style={styles.userName}>{user?.name || 'No Name'}</Text>
+        <Text style={styles.userEmail}>{user?.email || 'No Email'}</Text>
         <Text style={styles.userRole}>
           {user?.role === 'patient' ? 'Patient' : user?.role === 'health_worker' ? 'Health Worker' : user?.role === 'admin' ? 'Administrator' : 'User'}
         </Text>
@@ -136,7 +210,29 @@ export default function ProfileScreen() {
           <Text style={styles.sectionTitle}>Personal Information</Text>
           <TouchableOpacity
             style={styles.editButton}
-            onPress={() => setEditModalVisible(true)}
+            onPress={() => {
+              console.log('Edit button pressed');
+              console.log('Current user data:', user);
+              console.log('Current editForm state:', editForm);
+              
+              // Ensure form is populated with current user data
+              if (user) {
+                setEditForm({
+                  name: user.name || '',
+                  email: user.email || '',
+                  phone: user.contact_number || '',
+                  address: user.address || '',
+                });
+                console.log('Form populated with user data:', {
+                  name: user.name || '',
+                  email: user.email || '',
+                  phone: user.contact_number || '',
+                  address: user.address || '',
+                });
+              }
+              
+              setEditModalVisible(true);
+            }}
           >
             <Ionicons name="pencil" size={16} color="#4A90E2" />
             <Text style={styles.editButtonText}>Edit</Text>
@@ -147,7 +243,7 @@ export default function ProfileScreen() {
           <Ionicons name="person-outline" size={20} color="#666" />
           <View style={styles.infoContent}>
             <Text style={styles.infoLabel}>Full Name</Text>
-            <Text style={styles.infoValue}>{user?.name}</Text>
+            <Text style={styles.infoValue}>{user?.name || 'Not provided'}</Text>
           </View>
         </View>
 
@@ -155,7 +251,7 @@ export default function ProfileScreen() {
           <Ionicons name="mail-outline" size={20} color="#666" />
           <View style={styles.infoContent}>
             <Text style={styles.infoLabel}>Email Address</Text>
-            <Text style={styles.infoValue}>{user?.email}</Text>
+            <Text style={styles.infoValue}>{user?.email || 'Not provided'}</Text>
           </View>
         </View>
 
@@ -198,9 +294,62 @@ export default function ProfileScreen() {
           <Ionicons name="chevron-forward" size={20} color="#CCC" />
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.actionItem}>
+        <TouchableOpacity 
+          style={styles.actionItem}
+          activeOpacity={0.7}
+          onPress={() => {
+            console.log('About HealthReach button pressed - attempting navigation');
+            try {
+              router.push('/(patient)/about');
+              console.log('Navigation call completed');
+            } catch (error) {
+              console.error('Navigation error:', error);
+              Alert.alert('Error', 'Failed to open About page');
+            }
+          }}
+        >
           <Ionicons name="information-circle-outline" size={20} color="#4A90E2" />
           <Text style={styles.actionText}>About HealthReach</Text>
+          <Ionicons name="chevron-forward" size={20} color="#CCC" />
+        </TouchableOpacity>
+
+        <TouchableOpacity 
+          style={styles.actionItem}
+          activeOpacity={0.7}
+          onPress={() => {
+            console.log('=== DEBUG PROFILE EDIT ===');
+            console.log('User state:', user);
+            console.log('EditForm state:', editForm);
+            
+            // Test form update
+            const testData = {
+              name: 'Test Name Update',
+              email: user?.email || 'test@example.com',
+              contact_number: '123-456-7890' // Use correct backend field name
+            };
+            
+            Alert.alert(
+              'Debug Profile Edit',
+              `Current User: ${user?.name || 'null'}\nCurrent Form: ${editForm.name || 'empty'}\n\nTesting with: ${testData.name}`,
+              [
+                { text: 'Cancel', style: 'cancel' },
+                { 
+                  text: 'Test Update', 
+                  onPress: async () => {
+                    try {
+                      const response = await apiService.updateProfile(testData);
+                      Alert.alert('Test Result', `Success: ${response.success}\nMessage: ${response.message}`);
+                    } catch (error: any) {
+                      Alert.alert('Test Error', error.message);
+                    }
+                  }
+                }
+              ]
+            );
+          }}
+        >
+          <Ionicons name="bug-outline" size={20} color="#4A90E2" />
+          <Text style={styles.actionText}>Debug Profile Edit</Text>
           <Ionicons name="chevron-forward" size={20} color="#CCC" />
         </TouchableOpacity>
       </View>
@@ -239,8 +388,13 @@ export default function ProfileScreen() {
                 <TextInput
                   style={styles.input}
                   value={editForm.name}
-                  onChangeText={(text) => setEditForm(prev => ({ ...prev, name: text }))}
+                  onChangeText={(text) => {
+                    console.log('Name field changed:', text);
+                    setEditForm(prev => ({ ...prev, name: text }));
+                  }}
                   placeholder="Enter your full name"
+                  editable={true}
+                  selectTextOnFocus={true}
                 />
               </View>
 
@@ -249,10 +403,15 @@ export default function ProfileScreen() {
                 <TextInput
                   style={styles.input}
                   value={editForm.email}
-                  onChangeText={(text) => setEditForm(prev => ({ ...prev, email: text }))}
+                  onChangeText={(text) => {
+                    console.log('Email field changed:', text);
+                    setEditForm(prev => ({ ...prev, email: text }));
+                  }}
                   placeholder="Enter your email"
                   keyboardType="email-address"
                   autoCapitalize="none"
+                  editable={true}
+                  selectTextOnFocus={true}
                 />
               </View>
 
@@ -261,9 +420,31 @@ export default function ProfileScreen() {
                 <TextInput
                   style={styles.input}
                   value={editForm.phone}
-                  onChangeText={(text) => setEditForm(prev => ({ ...prev, phone: text }))}
+                  onChangeText={(text) => {
+                    console.log('Phone field changed:', text);
+                    setEditForm(prev => ({ ...prev, phone: text }));
+                  }}
                   placeholder="Enter your phone number"
                   keyboardType="phone-pad"
+                  editable={true}
+                  selectTextOnFocus={true}
+                />
+              </View>
+
+              <View style={styles.inputContainer}>
+                <Text style={styles.inputLabel}>Address</Text>
+                <TextInput
+                  style={[styles.input, styles.textArea]}
+                  value={editForm.address}
+                  onChangeText={(text) => {
+                    console.log('Address field changed:', text);
+                    setEditForm(prev => ({ ...prev, address: text }));
+                  }}
+                  placeholder="Enter your address"
+                  multiline={true}
+                  numberOfLines={3}
+                  editable={true}
+                  selectTextOnFocus={true}
                 />
               </View>
             </ScrollView>
@@ -467,6 +648,10 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     fontSize: 16,
     backgroundColor: '#FAFAFA',
+  },
+  textArea: {
+    height: 80,
+    textAlignVertical: 'top',
   },
   modalFooter: {
     flexDirection: 'row',

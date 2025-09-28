@@ -32,12 +32,9 @@ export default function LandingPage() {
       // Redirect authenticated users to their appropriate dashboard
       switch (user.role) {
         case 'admin':
-          console.log('LandingPage - Redirecting to admin dashboard');
-          router.replace('/(admin)');
-          break;
         case 'health_worker':
-          console.log('LandingPage - Redirecting to health worker dashboard');
-          router.replace('/(health-worker)');
+          console.log('LandingPage - Admin/Health Worker account detected, redirecting to not-available screen');
+          router.replace('/not-available');
           break;
         case 'patient':
           console.log('LandingPage - Redirecting to patient dashboard');
