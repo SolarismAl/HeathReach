@@ -12,7 +12,7 @@ export class CustomAuthService {
       console.log('Email:', email);
       
       // Make direct API call to Laravel backend for authentication
-      const response = await fetch('http://127.0.0.1:8000/api/auth/firebase-login', {
+      const response = await fetch('https://healthreach-api.onrender.com/api/auth/firebase-login', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -97,7 +97,7 @@ export class CustomAuthService {
     try {
       console.log('=== CUSTOM AUTH REGISTRATION ===');
       
-      const response = await fetch('http://127.0.0.1:8000/api/auth/register', {
+      const response = await fetch('https://healthreach-api.onrender.com/api/auth/register', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -140,7 +140,7 @@ export class CustomAuthService {
       const token = await AsyncStorage.getItem('auth_token');
       if (token) {
         try {
-          await fetch('http://127.0.0.1:8000/api/auth/logout', {
+          await fetch('https://healthreach-api.onrender.com/api/auth/logout', {
             method: 'POST',
             headers: {
               'Authorization': `Bearer ${token}`,
@@ -232,7 +232,7 @@ export class CustomAuthService {
       }
       
       // Send Google access token to backend for verification and user creation/login
-      const response = await fetch('http://127.0.0.1:8000/api/auth/google', {
+      const response = await fetch('https://healthreach-api.onrender.com/api/auth/google', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

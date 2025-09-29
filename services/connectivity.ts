@@ -90,7 +90,7 @@ class ConnectivityService {
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 5000);
       
-      const response = await fetch('http://127.0.0.1:8000/api/test/status', { 
+      const response = await fetch('https://healthreach-api.onrender.com/api/test/status', { 
         method: 'GET',
         signal: controller.signal,
         headers: {
