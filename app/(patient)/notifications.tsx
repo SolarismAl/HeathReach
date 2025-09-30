@@ -7,6 +7,7 @@ import {
   TouchableOpacity,
   RefreshControl,
   Alert,
+  ActivityIndicator,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import apiService from '../../services/api';
@@ -161,6 +162,15 @@ export default function NotificationsScreen() {
 
   const unreadCount = notifications.filter(n => !n.is_read).length;
 
+  if (loading) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color="#4A90E2" />
+        <Text style={styles.loadingText}>Loading notifications...</Text>
+      </View>
+    );
+  }
+
   return (
     <View style={styles.container}>
       {/* Header Actions */}
@@ -237,6 +247,18 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#F8F9FA',
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#F8F9FA',
+  },
+  loadingText: {
+    marginTop: 16,
+    fontSize: 16,
+    color: '#666',
+    fontWeight: '500',
   },
   headerActions: {
     backgroundColor: '#FFFFFF',

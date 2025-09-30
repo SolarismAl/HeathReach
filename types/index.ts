@@ -7,6 +7,7 @@ export interface User {
   contact_number?: string;
   address?: string;
   fcm_token?: string;
+  picture?: string;
   created_at?: string;
   updated_at?: string;
 }

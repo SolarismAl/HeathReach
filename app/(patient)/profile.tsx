@@ -9,6 +9,7 @@ import {
   TextInput,
   Modal,
   ActivityIndicator,
+  Image,
 } from 'react-native';
 import { router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -22,15 +23,27 @@ export default function ProfileScreen() {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [editModalVisible, setEditModalVisible] = useState(false);
+  const [passwordModalVisible, setPasswordModalVisible] = useState(false);
+  const [hasPassword, setHasPassword] = useState(false);
   const [editForm, setEditForm] = useState({
     name: '',
     email: '',
     phone: '',
     address: '',
   });
+  const [passwordForm, setPasswordForm] = useState({
+    current_password: '',
+    new_password: '',
+    new_password_confirmation: '',
+  });
+  const [newPasswordForm, setNewPasswordForm] = useState({
+    password: '',
+    password_confirmation: '',
+  });
 
   useEffect(() => {
     loadProfile();
+    checkPasswordStatus();
   }, [authUser]);
 
   useEffect(() => {
@@ -177,6 +190,102 @@ export default function ProfileScreen() {
     }
   };
 
+  const checkPasswordStatus = async () => {
+    try {
+      console.log('=== CHECKING PASSWORD STATUS ===');
+      const response = await apiService.hasPassword();
+      console.log('HasPassword API response:', response);
+      
+      if (response.success && response.data) {
+        const hasPasswordValue = response.data.has_password;
+        console.log('User has password:', hasPasswordValue);
+        setHasPassword(hasPasswordValue);
+      } else {
+        console.log('HasPassword API failed, defaulting to false');
+        setHasPassword(false);
+      }
+    } catch (error) {
+      console.error('Error checking password status:', error);
+      console.log('HasPassword API error, defaulting to false');
+      setHasPassword(false);
+    }
+  };
+
+  const handleChangePassword = async () => {
+    try {
+      console.log('=== CHANGE PASSWORD ATTEMPT ===');
+      console.log('User has password:', hasPassword);
+      
+      if (passwordForm.new_password !== passwordForm.new_password_confirmation) {
+        Alert.alert('Error', 'New passwords do not match');
+        return;
+      }
+
+      if (passwordForm.new_password.length < 6) {
+        Alert.alert('Error', 'Password must be at least 6 characters long');
+        return;
+      }
+
+      console.log('Calling changePassword API...');
+      const response = await apiService.changePassword({
+        current_password: passwordForm.current_password,
+        new_password: passwordForm.new_password,
+        new_password_confirmation: passwordForm.new_password_confirmation,
+      });
+
+      if (response.success) {
+        Alert.alert('Success', 'Password changed successfully');
+        setPasswordModalVisible(false);
+        setPasswordForm({
+          current_password: '',
+          new_password: '',
+          new_password_confirmation: '',
+        });
+      } else {
+        Alert.alert('Error', response.message || 'Failed to change password');
+      }
+    } catch (error: any) {
+      Alert.alert('Error', error.message || 'Failed to change password');
+    }
+  };
+
+  const handleSetPassword = async () => {
+    try {
+      console.log('=== SET PASSWORD ATTEMPT ===');
+      console.log('User has password:', hasPassword);
+      
+      if (newPasswordForm.password !== newPasswordForm.password_confirmation) {
+        Alert.alert('Error', 'Passwords do not match');
+        return;
+      }
+
+      if (newPasswordForm.password.length < 6) {
+        Alert.alert('Error', 'Password must be at least 6 characters long');
+        return;
+      }
+
+      console.log('Calling setPassword API...');
+      const response = await apiService.setPassword({
+        password: newPasswordForm.password,
+        password_confirmation: newPasswordForm.password_confirmation,
+      });
+
+      if (response.success) {
+        Alert.alert('Success', 'Password set successfully! You can now use email/password login.');
+        setPasswordModalVisible(false);
+        setNewPasswordForm({
+          password: '',
+          password_confirmation: '',
+        });
+        setHasPassword(true);
+      } else {
+        Alert.alert('Error', response.message || 'Failed to set password');
+      }
+    } catch (error: any) {
+      Alert.alert('Error', error.message || 'Failed to set password');
+    }
+  };
+
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
@@ -195,7 +304,15 @@ export default function ProfileScreen() {
       {/* Profile Header */}
       <View style={styles.profileHeader}>
         <View style={styles.avatarContainer}>
-          <Ionicons name="person" size={50} color="#FFFFFF" />
+          {user?.picture ? (
+            <Image 
+              source={{ uri: user.picture }} 
+              style={styles.profileImage}
+              onError={() => console.log('Failed to load profile image')}
+            />
+          ) : (
+            <Ionicons name="person" size={50} color="#FFFFFF" />
+          )}
         </View>
         <Text style={styles.userName}>{user?.name || 'No Name'}</Text>
         <Text style={styles.userEmail}>{user?.email || 'No Email'}</Text>
@@ -285,6 +402,17 @@ export default function ProfileScreen() {
         <TouchableOpacity style={styles.actionItem}>
           <Ionicons name="shield-outline" size={20} color="#4A90E2" />
           <Text style={styles.actionText}>Privacy Settings</Text>
+          <Ionicons name="chevron-forward" size={20} color="#CCC" />
+        </TouchableOpacity>
+
+        <TouchableOpacity 
+          style={styles.actionItem}
+          onPress={() => setPasswordModalVisible(true)}
+        >
+          <Ionicons name="key-outline" size={20} color="#4A90E2" />
+          <Text style={styles.actionText}>
+            {hasPassword ? 'Change Password' : 'Set Password'}
+          </Text>
           <Ionicons name="chevron-forward" size={20} color="#CCC" />
         </TouchableOpacity>
 
@@ -466,6 +594,126 @@ export default function ProfileScreen() {
           </View>
         </View>
       </Modal>
+
+      {/* Password Management Modal */}
+      <Modal
+        visible={passwordModalVisible}
+        animationType="slide"
+        transparent
+        onRequestClose={() => setPasswordModalVisible(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>
+                {hasPassword ? 'Change Password' : 'Set Password'}
+              </Text>
+              <TouchableOpacity onPress={() => setPasswordModalVisible(false)}>
+                <Ionicons name="close" size={24} color="#333" />
+              </TouchableOpacity>
+            </View>
+
+            <ScrollView style={styles.modalBody}>
+              {hasPassword ? (
+                // Change Password Form
+                <>
+                  <View style={styles.inputContainer}>
+                    <Text style={styles.inputLabel}>Current Password</Text>
+                    <TextInput
+                      style={styles.input}
+                      value={passwordForm.current_password}
+                      onChangeText={(text) => 
+                        setPasswordForm(prev => ({ ...prev, current_password: text }))
+                      }
+                      placeholder="Enter your current password"
+                      secureTextEntry
+                    />
+                  </View>
+
+                  <View style={styles.inputContainer}>
+                    <Text style={styles.inputLabel}>New Password</Text>
+                    <TextInput
+                      style={styles.input}
+                      value={passwordForm.new_password}
+                      onChangeText={(text) => 
+                        setPasswordForm(prev => ({ ...prev, new_password: text }))
+                      }
+                      placeholder="Enter new password (min 6 characters)"
+                      secureTextEntry
+                    />
+                  </View>
+
+                  <View style={styles.inputContainer}>
+                    <Text style={styles.inputLabel}>Confirm New Password</Text>
+                    <TextInput
+                      style={styles.input}
+                      value={passwordForm.new_password_confirmation}
+                      onChangeText={(text) => 
+                        setPasswordForm(prev => ({ ...prev, new_password_confirmation: text }))
+                      }
+                      placeholder="Confirm new password"
+                      secureTextEntry
+                    />
+                  </View>
+                </>
+              ) : (
+                // Set Password Form (for Google users)
+                <>
+                  <View style={styles.passwordInfo}>
+                    <Ionicons name="information-circle" size={24} color="#4A90E2" />
+                    <Text style={styles.passwordInfoText}>
+                      You signed in with Google. Set a password to enable email/password login.
+                    </Text>
+                  </View>
+
+                  <View style={styles.inputContainer}>
+                    <Text style={styles.inputLabel}>New Password</Text>
+                    <TextInput
+                      style={styles.input}
+                      value={newPasswordForm.password}
+                      onChangeText={(text) => 
+                        setNewPasswordForm(prev => ({ ...prev, password: text }))
+                      }
+                      placeholder="Enter password (min 6 characters)"
+                      secureTextEntry
+                    />
+                  </View>
+
+                  <View style={styles.inputContainer}>
+                    <Text style={styles.inputLabel}>Confirm Password</Text>
+                    <TextInput
+                      style={styles.input}
+                      value={newPasswordForm.password_confirmation}
+                      onChangeText={(text) => 
+                        setNewPasswordForm(prev => ({ ...prev, password_confirmation: text }))
+                      }
+                      placeholder="Confirm password"
+                      secureTextEntry
+                    />
+                  </View>
+                </>
+              )}
+            </ScrollView>
+
+            <View style={styles.modalFooter}>
+              <TouchableOpacity
+                style={styles.cancelButton}
+                onPress={() => setPasswordModalVisible(false)}
+              >
+                <Text style={styles.cancelButtonText}>Cancel</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.saveButton}
+                onPress={hasPassword ? handleChangePassword : handleSetPassword}
+              >
+                <Text style={styles.saveButtonText}>
+                  {hasPassword ? 'Change Password' : 'Set Password'}
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </ScrollView>
   );
 }
@@ -500,6 +748,11 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 16,
+  },
+  profileImage: {
+    width: 100,
+    height: 100,
+    borderRadius: 50,
   },
   userName: {
     fontSize: 24,
@@ -684,5 +937,20 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#FFFFFF',
     fontWeight: '600',
+  },
+  passwordInfo: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#E3F2FD',
+    padding: 16,
+    borderRadius: 8,
+    marginBottom: 20,
+  },
+  passwordInfoText: {
+    flex: 1,
+    fontSize: 14,
+    color: '#1976D2',
+    marginLeft: 12,
+    lineHeight: 20,
   },
 });

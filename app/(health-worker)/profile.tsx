@@ -8,6 +8,8 @@ import {
   Alert,
   TextInput,
   Modal,
+  ActivityIndicator,
+  Image,
 } from 'react-native';
 import { router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -20,14 +22,26 @@ export default function ProfileScreen() {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [editModalVisible, setEditModalVisible] = useState(false);
+  const [passwordModalVisible, setPasswordModalVisible] = useState(false);
+  const [hasPassword, setHasPassword] = useState(false);
   const [editForm, setEditForm] = useState({
     name: '',
     email: '',
     phone: '',
   });
+  const [passwordForm, setPasswordForm] = useState({
+    current_password: '',
+    new_password: '',
+    new_password_confirmation: '',
+  });
+  const [newPasswordForm, setNewPasswordForm] = useState({
+    password: '',
+    password_confirmation: '',
+  });
 
   useEffect(() => {
     loadProfile();
+    checkPasswordStatus();
   }, [authUser]);
 
   const loadProfile = async () => {
@@ -67,6 +81,17 @@ export default function ProfileScreen() {
       }
     } finally {
       setLoading(false);
+    }
+  };
+
+  const checkPasswordStatus = async () => {
+    try {
+      const response = await apiService.hasPassword();
+      if (response.success && response.data) {
+        setHasPassword(response.data.has_password);
+      }
+    } catch (error) {
+      console.error('Error checking password status:', error);
     }
   };
 
@@ -120,7 +145,15 @@ export default function ProfileScreen() {
       {/* Profile Header */}
       <View style={styles.profileHeader}>
         <View style={styles.avatarContainer}>
-          <Ionicons name="medical" size={50} color="#FFFFFF" />
+          {user?.picture ? (
+            <Image 
+              source={{ uri: user.picture }} 
+              style={styles.profileImage}
+              onError={() => console.log('Failed to load health worker profile image')}
+            />
+          ) : (
+            <Ionicons name="medical" size={50} color="#FFFFFF" />
+          )}
         </View>
         <Text style={styles.userName}>{user?.name}</Text>
         <Text style={styles.userEmail}>{user?.email}</Text>
@@ -343,6 +376,11 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 16,
+  },
+  profileImage: {
+    width: 100,
+    height: 100,
+    borderRadius: 50,
   },
   userName: {
     fontSize: 24,

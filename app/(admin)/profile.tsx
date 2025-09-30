@@ -8,6 +8,8 @@ import {
   Alert,
   TextInput,
   Modal,
+  ActivityIndicator,
+  Image,
 } from 'react-native';
 import { router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -19,11 +21,14 @@ export default function ProfileScreen() {
   const { user: authUser, signOut } = useAuth();
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const [hasPassword, setHasPassword] = useState(false);
   const [editModalVisible, setEditModalVisible] = useState(false);
   const [editForm, setEditForm] = useState({
     name: '',
     email: '',
     phone: '',
+    password: '',
+    confirmPassword: '',
   });
 
   useEffect(() => {
@@ -40,6 +45,8 @@ export default function ProfileScreen() {
           name: response.data.name || '',
           email: response.data.email || '',
           phone: response.data.contact_number || '',
+          password: '',
+          confirmPassword: '',
         });
       } else {
         // Fallback to AuthContext user data
@@ -49,6 +56,8 @@ export default function ProfileScreen() {
             name: authUser.name || '',
             email: authUser.email || '',
             phone: authUser.contact_number || '',
+            password: '',
+            confirmPassword: '',
           });
         }
       }
@@ -61,6 +70,8 @@ export default function ProfileScreen() {
           name: authUser.name || '',
           email: authUser.email || '',
           phone: authUser.contact_number || '',
+          password: '',
+          confirmPassword: '',
         });
       } else {
         Alert.alert('Error', 'Failed to load profile');
@@ -120,7 +131,15 @@ export default function ProfileScreen() {
       {/* Profile Header */}
       <View style={styles.profileHeader}>
         <View style={styles.avatarContainer}>
-          <Ionicons name="shield" size={50} color="#FFFFFF" />
+          {user?.picture ? (
+            <Image 
+              source={{ uri: user.picture }} 
+              style={styles.profileImage}
+              onError={() => console.log('Failed to load admin profile image')}
+            />
+          ) : (
+            <Ionicons name="shield" size={50} color="#FFFFFF" />
+          )}
         </View>
         <Text style={styles.userName}>{user?.name}</Text>
         <Text style={styles.userEmail}>{user?.email}</Text>
@@ -385,6 +404,11 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 16,
+  },
+  profileImage: {
+    width: 100,
+    height: 100,
+    borderRadius: 50,
   },
   userName: {
     fontSize: 24,

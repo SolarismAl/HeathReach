@@ -23,6 +23,7 @@ interface AuthContextType {
   signOut: () => Promise<void>;
   refreshUser: () => Promise<void>;
   forceLogout: () => Promise<void>;
+  checkPasswordStatus: () => Promise<boolean>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -296,6 +297,16 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     console.log('AuthContext: Force logout complete');
   };
 
+  const checkPasswordStatus = async (): Promise<boolean> => {
+    try {
+      const response = await apiService.hasPassword();
+      return response.success && response.data ? response.data.has_password : false;
+    } catch (error) {
+      console.error('Error checking password status:', error);
+      return false;
+    }
+  };
+
   const value: AuthContextType = {
     user,
     firebaseUser,
@@ -307,6 +318,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     signOut,
     refreshUser,
     forceLogout,
+    checkPasswordStatus,
   };
 
   return (

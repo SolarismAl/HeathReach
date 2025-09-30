@@ -7,6 +7,7 @@ import {
   TouchableOpacity,
   TextInput,
   Alert,
+  ActivityIndicator,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import apiService from '../../services/api';
@@ -201,12 +202,19 @@ export default function SendNotificationScreen() {
         <TouchableOpacity
           style={[styles.sendButton, loading && styles.sendButtonDisabled]}
           onPress={handleSendNotification}
-          disabled={loading || !formData.title.trim() || !formData.message.trim()}
+          disabled={loading}
         >
-          <Ionicons name="send" size={20} color="#FFFFFF" />
-          <Text style={styles.sendButtonText}>
-            {loading ? 'Sending...' : 'Send Notification'}
-          </Text>
+          {loading ? (
+            <>
+              <ActivityIndicator size="small" color="#FFFFFF" />
+              <Text style={styles.sendButtonText}>Sending...</Text>
+            </>
+          ) : (
+            <>
+              <Ionicons name="send" size={20} color="#FFFFFF" />
+              <Text style={styles.sendButtonText}>Send Notification</Text>
+            </>
+          )}
         </TouchableOpacity>
 
         <View style={styles.sendInfo}>

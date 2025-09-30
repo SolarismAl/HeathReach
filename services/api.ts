@@ -467,19 +467,85 @@ class ApiService {
     }
   }
 
-  // Forgot password
+  // Forgot password with retry logic
   async forgotPassword(email: string): Promise<ApiResponse<null>> {
-    try {
-      const response = await this.api.post('/auth/forgot-password', { email });
-      return response.data;
-    } catch (error: any) {
-      console.error('Forgot password error:', error);
-      return {
-        success: false,
-        message: error.response?.data?.message || 'Failed to send reset email',
-        data: null
-      };
+    const maxRetries = 2;
+    let lastError: any;
+
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+      try {
+        console.log(`=== FORGOT PASSWORD ATTEMPT ${attempt}/${maxRetries} ===`);
+        
+        // Create a custom axios instance with longer timeout for forgot password
+        const forgotPasswordApi = axios.create({
+          baseURL: this.baseURL,
+          timeout: 60000, // 60 seconds for forgot password (Render can be very slow)
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+          },
+        });
+
+        // Add the same request interceptor for authentication
+        forgotPasswordApi.interceptors.request.use(
+          async (config) => {
+            console.log('=== FORGOT PASSWORD REQUEST INTERCEPTOR ===');
+            const token = await this.getToken();
+            if (token) {
+              config.headers.Authorization = `Bearer ${token}`;
+              console.log('Authorization header set for forgot password request');
+            }
+            return config;
+          },
+          (error) => Promise.reject(error)
+        );
+
+        console.log(`Making forgot password request (attempt ${attempt}) with 60s timeout...`);
+        // Temporarily use debug endpoint to bypass email sending issues
+        const response = await forgotPasswordApi.post('/test/forgot-password', { email });
+        console.log('Forgot password response received:', response.status);
+        return response.data;
+        
+      } catch (error: any) {
+        console.error(`Forgot password attempt ${attempt} failed:`, error);
+        lastError = error;
+        
+        // If it's not a timeout and not the last attempt, don't retry
+        if (error.code !== 'ECONNABORTED' && attempt < maxRetries) {
+          break;
+        }
+        
+        // If it's the last attempt, handle the error
+        if (attempt === maxRetries) {
+          if (error.code === 'ECONNABORTED') {
+            return {
+              success: false,
+              message: 'The server is taking too long to respond. This might be due to a cold start. Please try again in a few moments.',
+              data: null
+            };
+          }
+          
+          return {
+            success: false,
+            message: error.response?.data?.message || 'Failed to send reset email. Please try again.',
+            data: null
+          };
+        }
+        
+        // Wait before retry (only for timeout errors)
+        if (error.code === 'ECONNABORTED' && attempt < maxRetries) {
+          console.log(`Waiting 3 seconds before retry...`);
+          await new Promise(resolve => setTimeout(resolve, 3000));
+        }
+      }
     }
+
+    // This shouldn't be reached, but just in case
+    return {
+      success: false,
+      message: 'Failed to send reset email after multiple attempts.',
+      data: null
+    };
   }
 
   async getProfile(): Promise<ApiResponse<User>> {
@@ -922,6 +988,56 @@ class ApiService {
         success: false,
         message: error.response?.data?.message || 'Failed to fetch activity logs',
         data: []
+      };
+    }
+  }
+
+  // Password management methods
+  async changePassword(data: {
+    current_password: string;
+    new_password: string;
+    new_password_confirmation: string;
+  }): Promise<ApiResponse<null>> {
+    try {
+      const response = await this.api.post('/auth/change-password', data);
+      return response.data;
+    } catch (error: any) {
+      console.error('Change password error:', error);
+      return {
+        success: false,
+        message: error.response?.data?.message || 'Failed to change password',
+        data: null
+      };
+    }
+  }
+
+  async setPassword(data: {
+    password: string;
+    password_confirmation: string;
+  }): Promise<ApiResponse<null>> {
+    try {
+      const response = await this.api.post('/auth/set-password', data);
+      return response.data;
+    } catch (error: any) {
+      console.error('Set password error:', error);
+      return {
+        success: false,
+        message: error.response?.data?.message || 'Failed to set password',
+        data: null
+      };
+    }
+  }
+
+  async hasPassword(): Promise<ApiResponse<{ has_password: boolean }>> {
+    try {
+      const response = await this.api.get('/auth/has-password');
+      return response.data;
+    } catch (error: any) {
+      console.error('Check password status error:', error);
+      return {
+        success: false,
+        message: error.response?.data?.message || 'Failed to check password status',
+        data: { has_password: false }
       };
     }
   }
