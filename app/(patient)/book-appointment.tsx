@@ -73,15 +73,17 @@ export default function BookAppointmentScreen() {
       if (response.success && response.data && response.data.length > 0) {
         console.log('Health centers loaded from Firebase:', response.data);
         setHealthCenters(response.data);
+        setError(null); // Clear any previous errors
       } else {
         console.log('No health centers found in Firebase');
         setHealthCenters([]);
-        setError('No health centers available. Please contact an administrator.');
+        // Show the error message from the API if available
+        setError(response.message || 'No health centers available. Please contact an administrator.');
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error loading health centers:', error);
       setHealthCenters([]);
-      setError('Failed to load health centers. Please check your connection.');
+      setError(error.message || 'Failed to load health centers. Please check your connection and try again.');
     } finally {
       setLoadingHealthCenters(false);
     }
@@ -258,8 +260,17 @@ export default function BookAppointmentScreen() {
       {/* Error Message */}
       {error && (
         <View style={styles.errorBanner}>
-          <Ionicons name="information-circle" size={20} color="#FF9800" />
-          <Text style={styles.errorText}>{error}</Text>
+          <View style={styles.errorContent}>
+            <Ionicons name="information-circle" size={20} color="#FF9800" />
+            <Text style={styles.errorText}>{error}</Text>
+          </View>
+          <TouchableOpacity 
+            style={styles.retryButton}
+            onPress={loadHealthCenters}
+          >
+            <Ionicons name="refresh" size={16} color="#FF9800" />
+            <Text style={styles.retryButtonText}>Retry</Text>
+          </TouchableOpacity>
         </View>
       )}
 
@@ -292,8 +303,9 @@ export default function BookAppointmentScreen() {
         <Text style={styles.sectionTitle}>Select Health Center</Text>
         {loadingHealthCenters ? (
           <View style={styles.loadingContainer}>
-            <ActivityIndicator size="small" color="#4A90E2" />
+            <ActivityIndicator size="large" color="#4A90E2" />
             <Text style={styles.loadingText}>Loading health centers...</Text>
+            <Text style={styles.loadingSubtext}>This may take a moment, please wait</Text>
           </View>
         ) : (
           <>
@@ -771,8 +783,7 @@ const styles = StyleSheet.create({
   },
   // New styles for enhanced functionality
   errorBanner: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: 'column',
     backgroundColor: '#FFF3E0',
     padding: 12,
     margin: 16,
@@ -780,14 +791,37 @@ const styles = StyleSheet.create({
     borderLeftWidth: 4,
     borderLeftColor: '#FF9800',
   },
+  errorContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
   errorText: {
     fontSize: 14,
     color: '#E65100',
     marginLeft: 8,
     flex: 1,
   },
-  loadingContainer: {
+  retryButton: {
     flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#FFFFFF',
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    borderRadius: 6,
+    borderWidth: 1,
+    borderColor: '#FF9800',
+    alignSelf: 'flex-start',
+  },
+  retryButtonText: {
+    fontSize: 14,
+    color: '#FF9800',
+    fontWeight: '600',
+    marginLeft: 4,
+  },
+  loadingContainer: {
+    flexDirection: 'column',
     alignItems: 'center',
     justifyContent: 'center',
     padding: 20,
@@ -795,7 +829,14 @@ const styles = StyleSheet.create({
   loadingText: {
     fontSize: 16,
     color: '#666',
-    marginLeft: 12,
+    marginTop: 12,
+    fontWeight: '600',
+  },
+  loadingSubtext: {
+    fontSize: 14,
+    color: '#999',
+    marginTop: 4,
+    textAlign: 'center',
   },
   priceInfo: {
     flexDirection: 'row',

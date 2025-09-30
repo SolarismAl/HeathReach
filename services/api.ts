@@ -658,10 +658,39 @@ class ApiService {
   // Health Centers
   async getHealthCenters(): Promise<ApiResponse<any[]>> {
     try {
-      const response = await this.api.get('/health-centers');
+      // Create a custom axios instance with longer timeout for health centers
+      const healthCentersApi = axios.create({
+        baseURL: this.baseURL,
+        timeout: 30000, // 30 seconds timeout for health centers (API may be slow)
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+      });
+
+      // Add the same request interceptor for authentication
+      const token = await this.getToken();
+      const config: any = {};
+      if (token) {
+        config.headers = { Authorization: `Bearer ${token}` };
+      }
+
+      console.log('Fetching health centers with 30s timeout...');
+      const response = await healthCentersApi.get('/health-centers', config);
+      console.log('Health centers loaded successfully');
       return response.data;
     } catch (error: any) {
       console.error('Get health centers error:', error);
+      
+      // Handle timeout errors specifically
+      if (error.code === 'ECONNABORTED' || error.message.includes('timeout')) {
+        return {
+          success: false,
+          message: 'Request timed out. The server is taking longer than expected. Please try again.',
+          data: []
+        };
+      }
+      
       return {
         success: false,
         message: error.response?.data?.message || 'Failed to fetch health centers',

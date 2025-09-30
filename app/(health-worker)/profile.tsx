@@ -10,6 +10,8 @@ import {
   Modal,
   ActivityIndicator,
   Image,
+  KeyboardAvoidingView,
+  Platform,
 } from 'react-native';
 import { router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -38,6 +40,8 @@ export default function ProfileScreen() {
     password: '',
     password_confirmation: '',
   });
+  const [savingProfile, setSavingProfile] = useState(false);
+  const [signingOut, setSigningOut] = useState(false);
 
   useEffect(() => {
     loadProfile();
@@ -96,6 +100,7 @@ export default function ProfileScreen() {
   };
 
   const handleUpdateProfile = async () => {
+    setSavingProfile(true);
     try {
       const response = await apiService.updateProfile(editForm);
       if (response.success && response.data) {
@@ -107,6 +112,8 @@ export default function ProfileScreen() {
       }
     } catch (error: any) {
       Alert.alert('Error', error.message || 'Failed to update profile');
+    } finally {
+      setSavingProfile(false);
     }
   };
 
@@ -114,6 +121,7 @@ export default function ProfileScreen() {
     console.log('=== LOGOUT BUTTON PRESSED ===');
     console.log('Health Worker Profile: Logout button clicked');
     
+    setSigningOut(true);
     try {
       console.log('Health Worker Profile: Starting logout process...');
       await signOut();
@@ -128,6 +136,8 @@ export default function ProfileScreen() {
       setTimeout(() => {
         router.replace('/');
       }, 100);
+    } finally {
+      // Don't set to false since we're navigating away
     }
   };
 
@@ -265,12 +275,22 @@ export default function ProfileScreen() {
       {/* Logout Section */}
       <View style={styles.section}>
         <TouchableOpacity 
-          style={styles.logoutButton} 
+          style={[styles.logoutButton, signingOut ? styles.logoutButtonDisabled : {}]} 
           onPress={handleLogout}
           activeOpacity={0.7}
+          disabled={signingOut}
         >
-          <Ionicons name="log-out-outline" size={20} color="#F44336" />
-          <Text style={styles.logoutText}>Logout</Text>
+          {signingOut ? (
+            <>
+              <ActivityIndicator size="small" color="#F44336" />
+              <Text style={styles.logoutText}>Signing Out...</Text>
+            </>
+          ) : (
+            <>
+              <Ionicons name="log-out-outline" size={20} color="#F44336" />
+              <Text style={styles.logoutText}>Logout</Text>
+            </>
+          )}
         </TouchableOpacity>
       </View>
 
@@ -281,7 +301,15 @@ export default function ProfileScreen() {
         transparent
         onRequestClose={() => setEditModalVisible(false)}
       >
-        <View style={styles.modalOverlay}>
+        <KeyboardAvoidingView 
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          style={styles.modalOverlay}
+        >
+          <TouchableOpacity 
+            style={styles.modalOverlayTouch} 
+            activeOpacity={1} 
+            onPress={() => setEditModalVisible(false)}
+          />
           <View style={styles.modalContent}>
             <View style={styles.modalHeader}>
               <Text style={styles.modalTitle}>Edit Profile</Text>
@@ -290,7 +318,7 @@ export default function ProfileScreen() {
               </TouchableOpacity>
             </View>
 
-            <ScrollView style={styles.modalBody}>
+            <ScrollView style={styles.modalBody} keyboardShouldPersistTaps="handled">
               <View style={styles.inputContainer}>
                 <Text style={styles.inputLabel}>Full Name</Text>
                 <TextInput
@@ -329,18 +357,27 @@ export default function ProfileScreen() {
               <TouchableOpacity
                 style={styles.cancelButton}
                 onPress={() => setEditModalVisible(false)}
+                disabled={savingProfile}
               >
                 <Text style={styles.cancelButtonText}>Cancel</Text>
               </TouchableOpacity>
               <TouchableOpacity
-                style={styles.saveButton}
+                style={[styles.saveButton, savingProfile ? styles.saveButtonDisabled : {}]}
                 onPress={handleUpdateProfile}
+                disabled={savingProfile}
               >
-                <Text style={styles.saveButtonText}>Save Changes</Text>
+                {savingProfile ? (
+                  <>
+                    <ActivityIndicator size="small" color="#FFFFFF" style={{ marginRight: 8 }} />
+                    <Text style={styles.saveButtonText}>Saving...</Text>
+                  </>
+                ) : (
+                  <Text style={styles.saveButtonText}>Save Changes</Text>
+                )}
               </TouchableOpacity>
             </View>
           </View>
-        </View>
+        </KeyboardAvoidingView>
       </Modal>
     </ScrollView>
   );
@@ -479,6 +516,9 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFEBEE',
     borderRadius: 8,
   },
+  logoutButtonDisabled: {
+    opacity: 0.6,
+  },
   logoutText: {
     fontSize: 16,
     color: '#F44336',
@@ -489,6 +529,9 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
     justifyContent: 'flex-end',
+  },
+  modalOverlayTouch: {
+    flex: 1,
   },
   modalContent: {
     backgroundColor: '#FFFFFF',
@@ -551,11 +594,16 @@ const styles = StyleSheet.create({
   },
   saveButton: {
     flex: 1,
+    flexDirection: 'row',
     paddingVertical: 12,
     marginLeft: 8,
     borderRadius: 8,
     backgroundColor: '#2E7D32',
     alignItems: 'center',
+    justifyContent: 'center',
+  },
+  saveButtonDisabled: {
+    opacity: 0.6,
   },
   saveButtonText: {
     fontSize: 16,
