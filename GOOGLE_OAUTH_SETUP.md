@@ -14,31 +14,36 @@ Find your Web client ID: `1035041170898-b68pk1d0hp4pikcr4ml5io281nvonn2a.apps.go
 ## 📝 Add These URIs
 
 ### **Authorized JavaScript Origins**
-Add these 3 URIs:
+Add these 4 URIs:
 
 ```
 https://healthreach-api.onrender.com
 http://localhost:8000
 http://127.0.0.1:8000
+https://auth.expo.io
 ```
 
 **Why these?**
 - `healthreach-api.onrender.com` - Your production API
 - `localhost:8000` - Local development
 - `127.0.0.1:8000` - Alternative local address
+- `https://auth.expo.io` - **Expo's OAuth proxy (REQUIRED for mobile)**
 
 ### **Authorized Redirect URIs**
-Add these 3 URIs:
+Add these 4 URIs:
 
 ```
 https://healthreach-api.onrender.com/auth/google/callback
 http://localhost:8000/auth/google/callback
 http://127.0.0.1:8000/auth/google/callback
+https://auth.expo.io/@alfonso_solar/HealthReach
 ```
 
 **Why these?**
-- These are the callback URLs where Google sends users after authentication
-- Must match your backend routes exactly
+- Backend callback URLs for web authentication
+- `https://auth.expo.io/@alfonso_solar/HealthReach` - **Expo proxy redirect (REQUIRED for mobile app)**
+
+**IMPORTANT**: Replace `alfonso_solar` with your actual Expo username!
 
 ## 🎯 Complete Configuration
 
@@ -48,11 +53,15 @@ Your final setup should look like this:
 1. `https://healthreach-api.onrender.com`
 2. `http://localhost:8000`
 3. `http://127.0.0.1:8000`
+4. `https://auth.expo.io` ⭐ **REQUIRED for mobile**
 
 ### **Authorized redirect URIs:**
 1. `https://healthreach-api.onrender.com/auth/google/callback`
 2. `http://localhost:8000/auth/google/callback`
 3. `http://127.0.0.1:8000/auth/google/callback`
+4. `https://auth.expo.io/@YOUR_EXPO_USERNAME/HealthReach` ⭐ **REQUIRED for mobile**
+
+**Replace `YOUR_EXPO_USERNAME` with your actual Expo username (e.g., `alfonso_solar`)**
 
 ## ⏱️ Important Notes
 
