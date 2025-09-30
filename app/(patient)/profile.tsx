@@ -393,17 +393,17 @@ export default function ProfileScreen() {
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Quick Actions</Text>
         
-        <TouchableOpacity style={styles.actionItem}>
+        {/* <TouchableOpacity style={styles.actionItem}>
           <Ionicons name="notifications-outline" size={20} color="#4A90E2" />
           <Text style={styles.actionText}>Notification Settings</Text>
           <Ionicons name="chevron-forward" size={20} color="#CCC" />
-        </TouchableOpacity>
+        </TouchableOpacity> */}
 
-        <TouchableOpacity style={styles.actionItem}>
+        {/* <TouchableOpacity style={styles.actionItem}>
           <Ionicons name="shield-outline" size={20} color="#4A90E2" />
           <Text style={styles.actionText}>Privacy Settings</Text>
           <Ionicons name="chevron-forward" size={20} color="#CCC" />
-        </TouchableOpacity>
+        </TouchableOpacity> */}
 
         <TouchableOpacity 
           style={styles.actionItem}
@@ -416,11 +416,11 @@ export default function ProfileScreen() {
           <Ionicons name="chevron-forward" size={20} color="#CCC" />
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.actionItem}>
+        {/* <TouchableOpacity style={styles.actionItem}>
           <Ionicons name="help-circle-outline" size={20} color="#4A90E2" />
           <Text style={styles.actionText}>Help & Support</Text>
           <Ionicons name="chevron-forward" size={20} color="#CCC" />
-        </TouchableOpacity>
+        </TouchableOpacity> */}
 
         <TouchableOpacity 
           style={styles.actionItem}
@@ -441,7 +441,7 @@ export default function ProfileScreen() {
           <Ionicons name="chevron-forward" size={20} color="#CCC" />
         </TouchableOpacity>
 
-        <TouchableOpacity 
+        {/* <TouchableOpacity 
           style={styles.actionItem}
           activeOpacity={0.7}
           onPress={() => {
@@ -479,7 +479,7 @@ export default function ProfileScreen() {
           <Ionicons name="bug-outline" size={20} color="#4A90E2" />
           <Text style={styles.actionText}>Debug Profile Edit</Text>
           <Ionicons name="chevron-forward" size={20} color="#CCC" />
-        </TouchableOpacity>
+        </TouchableOpacity> */}
       </View>
 
       {/* Logout Section */}

@@ -56,10 +56,6 @@ export default function LandingPage() {
     router.push('/auth');
   };
 
-  const handleForceLogout = async () => {
-    console.log('Force logout button pressed');
-    await forceLogout();
-  };
 
   console.log('LandingPage render - loading:', loading, 'user:', user);
 
@@ -110,15 +106,6 @@ export default function LandingPage() {
               activeOpacity={0.9}
             >
               <Text style={styles.getStartedText}>Get Started</Text>
-            </TouchableOpacity>
-            
-            {/* Debug button - remove after fixing */}
-            <TouchableOpacity 
-              style={styles.debugButton}
-              onPress={handleForceLogout}
-              activeOpacity={0.7}
-            >
-              <Text style={styles.debugText}>Clear Cache (Debug)</Text>
             </TouchableOpacity>
           </View>
         </View>

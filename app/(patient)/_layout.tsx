@@ -79,7 +79,7 @@ export default function PatientLayout() {
         }}
       />
       <Tabs.Screen
-        name="about"
+        name="About HealthReach"
         options={{
           href: null, // This hides the tab from the tab bar
         }}

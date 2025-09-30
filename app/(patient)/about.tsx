@@ -28,7 +28,7 @@ export default function AboutHealthReachScreen() {
   return (
     <View style={styles.container}>
       {/* Header */}
-      <View style={styles.header}>
+      {/* <View style={styles.header}>
         <TouchableOpacity 
           style={styles.backButton} 
           onPress={() => router.back()}
@@ -37,7 +37,7 @@ export default function AboutHealthReachScreen() {
         </TouchableOpacity>
         <Text style={styles.headerTitle}>About HealthReach</Text>
         <View style={styles.placeholder} />
-      </View>
+      </View> */}
 
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
         {/* App Logo/Icon */}
