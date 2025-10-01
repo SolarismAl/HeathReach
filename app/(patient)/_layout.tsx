@@ -35,7 +35,7 @@ export default function PatientLayout() {
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="home" size={size} color={color} />
           ),
-          headerTitle: 'HealthReach Dashboard',
+          headerShown: false,
         }}
       />
       <Tabs.Screen
@@ -45,7 +45,7 @@ export default function PatientLayout() {
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="calendar-outline" size={size} color={color} />
           ),
-          headerTitle: 'Book Appointment',
+          headerShown: false,
         }}
       />
       <Tabs.Screen
@@ -55,7 +55,7 @@ export default function PatientLayout() {
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="time-outline" size={size} color={color} />
           ),
-          headerTitle: 'Appointment History',
+          headerShown: false,
         }}
       />
       <Tabs.Screen
@@ -65,7 +65,7 @@ export default function PatientLayout() {
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="notifications-outline" size={size} color={color} />
           ),
-          headerTitle: 'Notifications',
+          headerShown: false,
         }}
       />
       <Tabs.Screen
@@ -75,13 +75,15 @@ export default function PatientLayout() {
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="person-outline" size={size} color={color} />
           ),
-          headerTitle: 'My Profile',
+          headerShown: false,
         }}
       />
       <Tabs.Screen
-        name="About HealthReach"
+        name="about"
         options={{
+          title: 'About HealthReach',
           href: null, // This hides the tab from the tab bar
+          headerShown: false,
         }}
       />
     </Tabs>

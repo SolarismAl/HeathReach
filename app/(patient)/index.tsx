@@ -21,9 +21,17 @@ export default function PatientDashboard() {
   const [recentNotifications, setRecentNotifications] = useState<Notification[]>([]);
   const [refreshing, setRefreshing] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [currentDateTime, setCurrentDateTime] = useState(new Date());
 
   useEffect(() => {
     loadDashboardData();
+    
+    // Update time every minute
+    const timer = setInterval(() => {
+      setCurrentDateTime(new Date());
+    }, 60000);
+
+    return () => clearInterval(timer);
   }, []);
 
   const loadDashboardData = async () => {
@@ -78,6 +86,27 @@ export default function PatientDashboard() {
     });
   };
 
+  const getCurrentPhilippinesDateTime = () => {
+    const options: Intl.DateTimeFormatOptions = {
+      timeZone: 'Asia/Manila',
+      weekday: 'long',
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+    };
+    const dateStr = currentDateTime.toLocaleDateString('en-US', options);
+    
+    const timeOptions: Intl.DateTimeFormatOptions = {
+      timeZone: 'Asia/Manila',
+      hour: 'numeric',
+      minute: '2-digit',
+      hour12: true,
+    };
+    const timeStr = currentDateTime.toLocaleTimeString('en-US', timeOptions);
+    
+    return { date: dateStr, time: timeStr };
+  };
+
   const getStatusBadgeStyle = (status: string) => {
     switch (status) {
       case 'confirmed':
@@ -127,6 +156,16 @@ export default function PatientDashboard() {
         <Text style={styles.welcomeText}>
           Welcome back, {user?.name?.split(' ')[0] || 'Patient'}!
         </Text>
+        <View style={styles.dateTimeContainer}>
+          <View style={styles.dateTimeRow}>
+            <Ionicons name="calendar-outline" size={16} color="rgba(255, 255, 255, 0.9)" />
+            <Text style={styles.dateTimeText}>{getCurrentPhilippinesDateTime().date}</Text>
+          </View>
+          <View style={styles.dateTimeRow}>
+            <Ionicons name="time-outline" size={16} color="rgba(255, 255, 255, 0.9)" />
+            <Text style={styles.dateTimeText}>{getCurrentPhilippinesDateTime().time}</Text>
+          </View>
+        </View>
         <Text style={styles.welcomeSubtext}>
           How can we help you today?
         </Text>
@@ -304,6 +343,21 @@ const styles = StyleSheet.create({
     ...typography.h3,
     color: colors.surface,
     marginBottom: spacing.xs,
+  },
+  dateTimeContainer: {
+    marginTop: spacing.sm,
+    marginBottom: spacing.md,
+    gap: spacing.xs,
+  },
+  dateTimeRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+  },
+  dateTimeText: {
+    ...typography.body2,
+    color: 'rgba(255, 255, 255, 0.9)',
+    marginLeft: spacing.xs,
   },
   welcomeSubtext: {
     ...typography.body1,

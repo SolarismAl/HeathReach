@@ -451,7 +451,14 @@ export default function ProfileScreen() {
           <Ionicons name="chevron-forward" size={20} color="#CCC" />
         </TouchableOpacity> */}
 
-        {/* About HealthReach button hidden as requested */}
+        <TouchableOpacity 
+          style={styles.actionItem}
+          onPress={() => router.push('/(patient)/about')}
+        >
+          <Ionicons name="information-circle-outline" size={20} color="#4A90E2" />
+          <Text style={styles.actionText}>About HealthReach</Text>
+          <Ionicons name="chevron-forward" size={20} color="#CCC" />
+        </TouchableOpacity>
 
         {/* <TouchableOpacity 
           style={styles.actionItem}
