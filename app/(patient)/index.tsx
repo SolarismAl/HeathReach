@@ -8,7 +8,6 @@ import {
   RefreshControl,
   Alert,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import apiService from '../../services/api';
@@ -140,19 +139,18 @@ export default function PatientDashboard() {
 
   return (
     <ProtectedRoute allowedRoles={['patient']}>
-      <SafeAreaView style={styles.safeArea}>
-        {loading ? (
-          <View style={styles.loadingContainer}>
-            <Ionicons name="medical" size={50} color="#4A90E2" />
-            <Text style={styles.loadingText}>Loading your dashboard...</Text>
-          </View>
-        ) : (
-          <ScrollView
-            style={styles.container}
-            refreshControl={
-              <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-            }
-          >
+      {loading ? (
+        <View style={styles.loadingContainer}>
+          <Ionicons name="medical" size={50} color="#4A90E2" />
+          <Text style={styles.loadingText}>Loading your dashboard...</Text>
+        </View>
+      ) : (
+        <ScrollView
+          style={styles.container}
+          refreshControl={
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+          }
+        >
       {/* Welcome Section */}
       <View style={styles.welcomeSection}>
         <Text style={styles.welcomeText}>
@@ -323,17 +321,12 @@ export default function PatientDashboard() {
         )}
       </View>
         </ScrollView>
-        )}
-      </SafeAreaView>
+      )}
     </ProtectedRoute>
   );
 }
 
 const styles = StyleSheet.create({
-  safeArea: {
-    flex: 1,
-    backgroundColor: colors.background,
-  },
   container: {
     ...neumorphism.container,
   },

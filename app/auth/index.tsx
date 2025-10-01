@@ -5,12 +5,13 @@ import {
   TextInput,
   TouchableOpacity,
   StyleSheet,
-  SafeAreaView,
   Alert,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
+  useColorScheme,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../../contexts/AuthContext';
@@ -28,6 +29,20 @@ export default function LoginScreen() {
   const [googleLoading, setGoogleLoading] = useState(false);
   const { signInWithEmail, signInWithGoogle, loading } = useAuth();
   const { toast, showError, showSuccess, hideToast } = useToast();
+  
+  const colorScheme = useColorScheme();
+  const isDark = colorScheme === 'dark';
+  
+  // Define colors based on theme
+  const themeColors = {
+    background: isDark ? '#1a1a1a' : colors.background,
+    surface: isDark ? '#2d2d2d' : colors.background,
+    text: isDark ? '#FFFFFF' : colors.textPrimary,
+    textSecondary: isDark ? '#B0B0B0' : colors.textSecondary,
+    inputBackground: isDark ? '#2d2d2d' : colors.background,
+    border: isDark ? '#3d3d3d' : colors.border,
+    primary: colors.primary,
+  };
 
   const handleLogin = async () => {
     if (!email.trim() || !password.trim()) {
@@ -80,20 +95,21 @@ export default function LoginScreen() {
         <ScrollView contentContainerStyle={styles.scrollContent}>
           {/* Header */}
           <View style={styles.header}>
-            <View style={styles.logoContainer}>
+            <View style={[styles.logoContainer, { backgroundColor: themeColors.surface }]}>
               <Ionicons name="medical" size={50} color="#4A90E2" />
             </View>
-            <Text style={styles.title}>Welcome Back</Text>
-            <Text style={styles.subtitle}>Sign in to continue to HealthReach</Text>
+            <Text style={[styles.title, { color: themeColors.text }]}>Welcome Back</Text>
+            <Text style={[styles.subtitle, { color: themeColors.textSecondary }]}>Sign in to continue to HealthReach</Text>
           </View>
 
           {/* Form */}
           <View style={styles.form}>
-            <View style={styles.inputContainer}>
-              <Ionicons name="mail" size={20} color="#666" style={styles.inputIcon} />
+            <View style={[styles.inputContainer, { backgroundColor: themeColors.inputBackground }]}>
+              <Ionicons name="mail" size={20} color={themeColors.textSecondary} style={styles.inputIcon} />
               <TextInput
-                style={styles.input}
+                style={[styles.input, { color: themeColors.text }]}
                 placeholder="Email Address"
+                placeholderTextColor={themeColors.textSecondary}
                 value={email}
                 onChangeText={setEmail}
                 keyboardType="email-address"
@@ -102,11 +118,12 @@ export default function LoginScreen() {
               />
             </View>
 
-            <View style={styles.inputContainer}>
-              <Ionicons name="lock-closed" size={20} color="#666" style={styles.inputIcon} />
+            <View style={[styles.inputContainer, { backgroundColor: themeColors.inputBackground }]}>
+              <Ionicons name="lock-closed" size={20} color={themeColors.textSecondary} style={styles.inputIcon} />
               <TextInput
-                style={styles.input}
+                style={[styles.input, { color: themeColors.text }]}
                 placeholder="Password"
+                placeholderTextColor={themeColors.textSecondary}
                 value={password}
                 onChangeText={setPassword}
                 secureTextEntry={!showPassword}
@@ -119,7 +136,7 @@ export default function LoginScreen() {
                 <Ionicons 
                   name={showPassword ? "eye-off" : "eye"} 
                   size={20} 
-                  color="#666" 
+                  color={themeColors.textSecondary} 
                 />
               </TouchableOpacity>
             </View>
@@ -135,18 +152,18 @@ export default function LoginScreen() {
             </TouchableOpacity>
 
             <View style={styles.divider}>
-              <View style={styles.dividerLine} />
-              <Text style={styles.dividerText}>OR</Text>
-              <View style={styles.dividerLine} />
+              <View style={[styles.dividerLine, { backgroundColor: themeColors.border }]} />
+              <Text style={[styles.dividerText, { color: themeColors.textSecondary }]}>OR</Text>
+              <View style={[styles.dividerLine, { backgroundColor: themeColors.border }]} />
             </View>
 
             <TouchableOpacity
-              style={[styles.googleButton, googleLoading && styles.googleButtonDisabled]}
+              style={[styles.googleButton, { backgroundColor: themeColors.surface }, googleLoading && styles.googleButtonDisabled]}
               onPress={handleGoogleLogin}
               disabled={googleLoading}
             >
               <Ionicons name="logo-google" size={20} color="#DB4437" style={styles.googleIcon} />
-              <Text style={styles.googleButtonText}>
+              <Text style={[styles.googleButtonText, { color: themeColors.text }]}>
                 {googleLoading ? 'Connecting...' : 'Continue with Google'}
               </Text>
             </TouchableOpacity>
@@ -155,15 +172,15 @@ export default function LoginScreen() {
               style={styles.forgotPassword}
               onPress={() => router.push('/auth/forgot-password')}
             >
-              <Text style={styles.forgotPasswordText}>Forgot Password?</Text>
+              <Text style={[styles.forgotPasswordText, { color: themeColors.primary }]}>Forgot Password?</Text>
             </TouchableOpacity>
           </View>
 
           {/* Footer */}
           <View style={styles.footer}>
-            <Text style={styles.footerText}>Don't have an account? </Text>
+            <Text style={[styles.footerText, { color: themeColors.textSecondary }]}>Don't have an account? </Text>
             <TouchableOpacity onPress={navigateToRegister}>
-              <Text style={styles.signUpText}>Sign Up</Text>
+              <Text style={[styles.signUpText, { color: themeColors.primary }]}>Sign Up</Text>
             </TouchableOpacity>
           </View>
         </ScrollView>
