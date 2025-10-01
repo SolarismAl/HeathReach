@@ -17,6 +17,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import GoogleSignInModal from '../../components/GoogleSignInModal';
 import Toast from '../../components/Toast';
 import { useToast } from '../../hooks/useToast';
+import { neumorphism, colors, spacing, borderRadius, typography, shadows } from '../../styles/neumorphism';
 
 export default function LoginScreen() {
   const [email, setEmail] = useState('');
@@ -187,142 +188,117 @@ export default function LoginScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.background,
   },
   keyboardView: {
     flex: 1,
   },
   scrollContent: {
     flexGrow: 1,
-    paddingHorizontal: 24,
+    paddingHorizontal: spacing.lg,
   },
   header: {
     alignItems: 'center',
-    paddingTop: 60,
-    paddingBottom: 40,
+    paddingTop: spacing.xxl + spacing.lg,
+    paddingBottom: spacing.xl,
   },
   logoContainer: {
+    ...neumorphism.iconContainerLarge,
     width: 80,
     height: 80,
     borderRadius: 40,
-    backgroundColor: '#F0F8FF',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 20,
+    marginBottom: spacing.lg,
   },
   title: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    color: '#333',
-    marginBottom: 8,
+    ...typography.h2,
+    marginBottom: spacing.sm,
   },
   subtitle: {
-    fontSize: 16,
-    color: '#666',
+    ...typography.body1,
     textAlign: 'center',
   },
   form: {
     flex: 1,
-    paddingTop: 20,
+    paddingTop: spacing.lg,
   },
   inputContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: '#E0E0E0',
-    borderRadius: 12,
-    paddingHorizontal: 16,
-    marginBottom: 16,
-    backgroundColor: '#FAFAFA',
+    ...neumorphism.inputContainer,
   },
   inputIcon: {
-    marginRight: 12,
+    marginRight: spacing.md,
   },
   input: {
     flex: 1,
     height: 50,
     fontSize: 16,
-    color: '#333',
+    color: colors.textPrimary,
   },
   eyeIcon: {
-    padding: 4,
+    padding: spacing.xs,
   },
   loginButton: {
-    backgroundColor: '#4A90E2',
-    paddingVertical: 16,
-    borderRadius: 12,
-    alignItems: 'center',
-    marginTop: 20,
-    marginBottom: 16,
+    ...neumorphism.button,
+    marginTop: spacing.lg,
+    marginBottom: spacing.md,
   },
   loginButtonDisabled: {
-    backgroundColor: '#B0B0B0',
+    backgroundColor: colors.textDisabled,
+    ...shadows.subtle,
   },
   loginButtonText: {
-    color: '#FFFFFF',
-    fontSize: 16,
-    fontWeight: 'bold',
+    ...neumorphism.buttonText,
   },
   forgotPassword: {
     alignItems: 'center',
   },
   forgotPasswordText: {
-    color: '#4A90E2',
-    fontSize: 14,
+    ...typography.body2,
+    color: colors.primary,
   },
   footer: {
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
-    paddingBottom: 40,
-    paddingTop: 20,
+    paddingBottom: spacing.xl,
+    paddingTop: spacing.lg,
   },
   footerText: {
-    fontSize: 14,
-    color: '#666',
+    ...typography.body2,
   },
   signUpText: {
-    fontSize: 14,
-    color: '#4A90E2',
+    ...typography.body2,
+    color: colors.primary,
     fontWeight: 'bold',
   },
   divider: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginVertical: 20,
+    marginVertical: spacing.lg,
   },
   dividerLine: {
     flex: 1,
     height: 1,
-    backgroundColor: '#E0E0E0',
+    backgroundColor: colors.border,
   },
   dividerText: {
-    marginHorizontal: 16,
-    fontSize: 14,
-    color: '#666',
+    marginHorizontal: spacing.md,
+    ...typography.body2,
     fontWeight: '500',
   },
   googleButton: {
-    backgroundColor: '#FFFFFF',
-    borderWidth: 1,
-    borderColor: '#E0E0E0',
-    paddingVertical: 16,
-    borderRadius: 12,
-    alignItems: 'center',
-    marginBottom: 16,
+    ...neumorphism.buttonSecondary,
     flexDirection: 'row',
     justifyContent: 'center',
+    marginBottom: spacing.md,
   },
   googleButtonDisabled: {
-    backgroundColor: '#F5F5F5',
-    borderColor: '#D0D0D0',
+    backgroundColor: colors.surfaceDark,
+    ...shadows.subtle,
   },
   googleIcon: {
-    marginRight: 12,
+    marginRight: spacing.md,
   },
   googleButtonText: {
-    color: '#333',
-    fontSize: 16,
-    fontWeight: '600',
+    ...neumorphism.buttonSecondaryText,
   },
 });

@@ -10,12 +10,15 @@ import {
   Modal,
   ActivityIndicator,
   Image,
+  KeyboardAvoidingView,
+  Platform,
 } from 'react-native';
 import { router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import apiService from '../../services/api';
 import { useAuth } from '../../contexts/AuthContext';
 import { User } from '../../types';
+import { neumorphism, colors, spacing, borderRadius, typography, shadows } from '../../styles/neumorphism';
 
 export default function ProfileScreen() {
   const { user: authUser, signOut } = useAuth();
@@ -173,21 +176,47 @@ export default function ProfileScreen() {
     console.log('=== LOGOUT BUTTON PRESSED ===');
     console.log('Patient Profile: Logout button clicked');
     
-    try {
-      console.log('Patient Profile: Starting logout process...');
-      await signOut();
-      console.log('Patient Profile: Logout successful, navigating to landing page');
-      // Use setTimeout to ensure state updates are processed
-      setTimeout(() => {
-        router.replace('/');
-      }, 100);
-    } catch (error) {
-      console.error('Patient Profile: Logout error:', error);
-      // Even if there's an error, still navigate away
-      setTimeout(() => {
-        router.replace('/');
-      }, 100);
-    }
+    Alert.alert(
+      '🚪 Logout',
+      'Are you sure you want to logout?',
+      [
+        {
+          text: 'Cancel',
+          style: 'cancel',
+        },
+        {
+          text: 'Logout',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              console.log('Patient Profile: Starting logout process...');
+              
+              // Show logging out message
+              Alert.alert(
+                '⏳ Logging Out',
+                'Please wait...',
+                [],
+                { cancelable: false }
+              );
+              
+              await signOut();
+              console.log('Patient Profile: Logout successful, navigating to landing page');
+              
+              // Use setTimeout to ensure state updates are processed
+              setTimeout(() => {
+                router.replace('/');
+              }, 100);
+            } catch (error) {
+              console.error('Patient Profile: Logout error:', error);
+              // Even if there's an error, still navigate away
+              setTimeout(() => {
+                router.replace('/');
+              }, 100);
+            }
+          },
+        },
+      ]
+    );
   };
 
   const checkPasswordStatus = async () => {
@@ -422,24 +451,7 @@ export default function ProfileScreen() {
           <Ionicons name="chevron-forward" size={20} color="#CCC" />
         </TouchableOpacity> */}
 
-        <TouchableOpacity 
-          style={styles.actionItem}
-          activeOpacity={0.7}
-          onPress={() => {
-            console.log('About HealthReach button pressed - attempting navigation');
-            try {
-              router.push('/(patient)/about');
-              console.log('Navigation call completed');
-            } catch (error) {
-              console.error('Navigation error:', error);
-              Alert.alert('Error', 'Failed to open About page');
-            }
-          }}
-        >
-          <Ionicons name="information-circle-outline" size={20} color="#4A90E2" />
-          <Text style={styles.actionText}>About HealthReach</Text>
-          <Ionicons name="chevron-forward" size={20} color="#CCC" />
-        </TouchableOpacity>
+        {/* About HealthReach button hidden as requested */}
 
         {/* <TouchableOpacity 
           style={styles.actionItem}
@@ -494,86 +506,114 @@ export default function ProfileScreen() {
         </TouchableOpacity>
       </View>
 
-      {/* Edit Profile Modal */}
+      {/* Edit Profile Modal with Keyboard Handling */}
       <Modal
         visible={editModalVisible}
         animationType="slide"
         transparent
         onRequestClose={() => setEditModalVisible(false)}
       >
-        <View style={styles.modalOverlay}>
+        <KeyboardAvoidingView
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          style={styles.modalOverlay}
+        >
+          <TouchableOpacity 
+            style={styles.modalOverlayTouch}
+            activeOpacity={1}
+            onPress={() => setEditModalVisible(false)}
+          />
           <View style={styles.modalContent}>
             <View style={styles.modalHeader}>
               <Text style={styles.modalTitle}>Edit Profile</Text>
               <TouchableOpacity onPress={() => setEditModalVisible(false)}>
-                <Ionicons name="close" size={24} color="#333" />
+                <Ionicons name="close" size={24} color={colors.textPrimary} />
               </TouchableOpacity>
             </View>
 
-            <ScrollView style={styles.modalBody}>
-              <View style={styles.inputContainer}>
+            <ScrollView 
+              style={styles.modalBody}
+              keyboardShouldPersistTaps="handled"
+              showsVerticalScrollIndicator={false}
+            >
+              <View style={styles.formInputContainer}>
                 <Text style={styles.inputLabel}>Full Name</Text>
-                <TextInput
-                  style={styles.input}
-                  value={editForm.name}
-                  onChangeText={(text) => {
-                    console.log('Name field changed:', text);
-                    setEditForm(prev => ({ ...prev, name: text }));
-                  }}
-                  placeholder="Enter your full name"
-                  editable={true}
-                  selectTextOnFocus={true}
-                />
+                <View style={styles.inputWrapper}>
+                  <Ionicons name="person-outline" size={20} color={colors.textSecondary} style={styles.inputIcon} />
+                  <TextInput
+                    style={styles.input}
+                    value={editForm.name}
+                    onChangeText={(text) => {
+                      console.log('Name field changed:', text);
+                      setEditForm(prev => ({ ...prev, name: text }));
+                    }}
+                    placeholder="Enter your full name"
+                    placeholderTextColor={colors.textTertiary}
+                    editable={true}
+                    selectTextOnFocus={true}
+                  />
+                </View>
               </View>
 
-              <View style={styles.inputContainer}>
+              <View style={styles.formInputContainer}>
                 <Text style={styles.inputLabel}>Email Address</Text>
-                <TextInput
-                  style={styles.input}
-                  value={editForm.email}
-                  onChangeText={(text) => {
-                    console.log('Email field changed:', text);
-                    setEditForm(prev => ({ ...prev, email: text }));
-                  }}
-                  placeholder="Enter your email"
-                  keyboardType="email-address"
-                  autoCapitalize="none"
-                  editable={true}
-                  selectTextOnFocus={true}
-                />
+                <View style={styles.inputWrapper}>
+                  <Ionicons name="mail-outline" size={20} color={colors.textSecondary} style={styles.inputIcon} />
+                  <TextInput
+                    style={styles.input}
+                    value={editForm.email}
+                    onChangeText={(text) => {
+                      console.log('Email field changed:', text);
+                      setEditForm(prev => ({ ...prev, email: text }));
+                    }}
+                    placeholder="Enter your email"
+                    placeholderTextColor={colors.textTertiary}
+                    keyboardType="email-address"
+                    autoCapitalize="none"
+                    editable={true}
+                    selectTextOnFocus={true}
+                  />
+                </View>
               </View>
 
-              <View style={styles.inputContainer}>
+              <View style={styles.formInputContainer}>
                 <Text style={styles.inputLabel}>Phone Number</Text>
-                <TextInput
-                  style={styles.input}
-                  value={editForm.phone}
-                  onChangeText={(text) => {
-                    console.log('Phone field changed:', text);
-                    setEditForm(prev => ({ ...prev, phone: text }));
-                  }}
-                  placeholder="Enter your phone number"
-                  keyboardType="phone-pad"
-                  editable={true}
-                  selectTextOnFocus={true}
-                />
+                <View style={styles.inputWrapper}>
+                  <Ionicons name="call-outline" size={20} color={colors.textSecondary} style={styles.inputIcon} />
+                  <TextInput
+                    style={styles.input}
+                    value={editForm.phone}
+                    onChangeText={(text) => {
+                      console.log('Phone field changed:', text);
+                      setEditForm(prev => ({ ...prev, phone: text }));
+                    }}
+                    placeholder="Enter your phone number"
+                    placeholderTextColor={colors.textTertiary}
+                    keyboardType="phone-pad"
+                    editable={true}
+                    selectTextOnFocus={true}
+                  />
+                </View>
               </View>
 
-              <View style={styles.inputContainer}>
+              <View style={styles.formInputContainer}>
                 <Text style={styles.inputLabel}>Address</Text>
-                <TextInput
-                  style={[styles.input, styles.textArea]}
-                  value={editForm.address}
-                  onChangeText={(text) => {
-                    console.log('Address field changed:', text);
-                    setEditForm(prev => ({ ...prev, address: text }));
-                  }}
-                  placeholder="Enter your address"
-                  multiline={true}
-                  numberOfLines={3}
-                  editable={true}
-                  selectTextOnFocus={true}
-                />
+                <View style={[styles.inputWrapper, styles.textAreaWrapper]}>
+                  <Ionicons name="location-outline" size={20} color={colors.textSecondary} style={styles.inputIconTop} />
+                  <TextInput
+                    style={[styles.input, styles.textArea]}
+                    value={editForm.address}
+                    onChangeText={(text) => {
+                      console.log('Address field changed:', text);
+                      setEditForm(prev => ({ ...prev, address: text }));
+                    }}
+                    placeholder="Enter your address"
+                    placeholderTextColor={colors.textTertiary}
+                    multiline={true}
+                    numberOfLines={3}
+                    editable={true}
+                    selectTextOnFocus={true}
+                  />
+                </View>
               </View>
             </ScrollView>
 
@@ -592,7 +632,7 @@ export default function ProfileScreen() {
               </TouchableOpacity>
             </View>
           </View>
-        </View>
+        </KeyboardAvoidingView>
       </Modal>
 
       {/* Password Management Modal */}
@@ -609,7 +649,7 @@ export default function ProfileScreen() {
                 {hasPassword ? 'Change Password' : 'Set Password'}
               </Text>
               <TouchableOpacity onPress={() => setPasswordModalVisible(false)}>
-                <Ionicons name="close" size={24} color="#333" />
+                <Ionicons name="close" size={24} color={colors.textPrimary} />
               </TouchableOpacity>
             </View>
 
@@ -617,79 +657,99 @@ export default function ProfileScreen() {
               {hasPassword ? (
                 // Change Password Form
                 <>
-                  <View style={styles.inputContainer}>
+                  <View style={styles.formInputContainer}>
                     <Text style={styles.inputLabel}>Current Password</Text>
-                    <TextInput
-                      style={styles.input}
-                      value={passwordForm.current_password}
-                      onChangeText={(text) => 
-                        setPasswordForm(prev => ({ ...prev, current_password: text }))
-                      }
-                      placeholder="Enter your current password"
-                      secureTextEntry
-                    />
+                    <View style={styles.inputWrapper}>
+                      <Ionicons name="lock-closed-outline" size={20} color={colors.textSecondary} style={styles.inputIcon} />
+                      <TextInput
+                        style={styles.input}
+                        value={passwordForm.current_password}
+                        onChangeText={(text) => 
+                          setPasswordForm(prev => ({ ...prev, current_password: text }))
+                        }
+                        placeholder="Enter your current password"
+                        placeholderTextColor={colors.textTertiary}
+                        secureTextEntry
+                      />
+                    </View>
                   </View>
 
-                  <View style={styles.inputContainer}>
+                  <View style={styles.formInputContainer}>
                     <Text style={styles.inputLabel}>New Password</Text>
-                    <TextInput
-                      style={styles.input}
-                      value={passwordForm.new_password}
-                      onChangeText={(text) => 
-                        setPasswordForm(prev => ({ ...prev, new_password: text }))
-                      }
-                      placeholder="Enter new password (min 6 characters)"
-                      secureTextEntry
-                    />
+                    <View style={styles.inputWrapper}>
+                      <Ionicons name="key-outline" size={20} color={colors.textSecondary} style={styles.inputIcon} />
+                      <TextInput
+                        style={styles.input}
+                        value={passwordForm.new_password}
+                        onChangeText={(text) => 
+                          setPasswordForm(prev => ({ ...prev, new_password: text }))
+                        }
+                        placeholder="Enter new password (min 6 characters)"
+                        placeholderTextColor={colors.textTertiary}
+                        secureTextEntry
+                      />
+                    </View>
                   </View>
 
-                  <View style={styles.inputContainer}>
+                  <View style={styles.formInputContainer}>
                     <Text style={styles.inputLabel}>Confirm New Password</Text>
-                    <TextInput
-                      style={styles.input}
-                      value={passwordForm.new_password_confirmation}
-                      onChangeText={(text) => 
-                        setPasswordForm(prev => ({ ...prev, new_password_confirmation: text }))
-                      }
-                      placeholder="Confirm new password"
-                      secureTextEntry
-                    />
+                    <View style={styles.inputWrapper}>
+                      <Ionicons name="checkmark-circle-outline" size={20} color={colors.textSecondary} style={styles.inputIcon} />
+                      <TextInput
+                        style={styles.input}
+                        value={passwordForm.new_password_confirmation}
+                        onChangeText={(text) => 
+                          setPasswordForm(prev => ({ ...prev, new_password_confirmation: text }))
+                        }
+                        placeholder="Confirm new password"
+                        placeholderTextColor={colors.textTertiary}
+                        secureTextEntry
+                      />
+                    </View>
                   </View>
                 </>
               ) : (
                 // Set Password Form (for Google users)
                 <>
                   <View style={styles.passwordInfo}>
-                    <Ionicons name="information-circle" size={24} color="#4A90E2" />
+                    <Ionicons name="information-circle" size={24} color={colors.info} />
                     <Text style={styles.passwordInfoText}>
                       You signed in with Google. Set a password to enable email/password login.
                     </Text>
                   </View>
 
-                  <View style={styles.inputContainer}>
+                  <View style={styles.formInputContainer}>
                     <Text style={styles.inputLabel}>New Password</Text>
-                    <TextInput
-                      style={styles.input}
-                      value={newPasswordForm.password}
-                      onChangeText={(text) => 
-                        setNewPasswordForm(prev => ({ ...prev, password: text }))
-                      }
-                      placeholder="Enter password (min 6 characters)"
-                      secureTextEntry
-                    />
+                    <View style={styles.inputWrapper}>
+                      <Ionicons name="key-outline" size={20} color={colors.textSecondary} style={styles.inputIcon} />
+                      <TextInput
+                        style={styles.input}
+                        value={newPasswordForm.password}
+                        onChangeText={(text) => 
+                          setNewPasswordForm(prev => ({ ...prev, password: text }))
+                        }
+                        placeholder="Enter password (min 6 characters)"
+                        placeholderTextColor={colors.textTertiary}
+                        secureTextEntry
+                      />
+                    </View>
                   </View>
 
-                  <View style={styles.inputContainer}>
+                  <View style={styles.formInputContainer}>
                     <Text style={styles.inputLabel}>Confirm Password</Text>
-                    <TextInput
-                      style={styles.input}
-                      value={newPasswordForm.password_confirmation}
-                      onChangeText={(text) => 
-                        setNewPasswordForm(prev => ({ ...prev, password_confirmation: text }))
-                      }
-                      placeholder="Confirm password"
-                      secureTextEntry
-                    />
+                    <View style={styles.inputWrapper}>
+                      <Ionicons name="checkmark-circle-outline" size={20} color={colors.textSecondary} style={styles.inputIcon} />
+                      <TextInput
+                        style={styles.input}
+                        value={newPasswordForm.password_confirmation}
+                        onChangeText={(text) => 
+                          setNewPasswordForm(prev => ({ ...prev, password_confirmation: text }))
+                        }
+                        placeholder="Confirm password"
+                        placeholderTextColor={colors.textTertiary}
+                        secureTextEntry
+                      />
+                    </View>
                   </View>
                 </>
               )}
@@ -720,237 +780,204 @@ export default function ProfileScreen() {
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
-    backgroundColor: '#F8F9FA',
+    ...neumorphism.container,
   },
   loadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#F8F9FA',
+    ...neumorphism.loadingContainer,
   },
   loadingText: {
-    marginTop: 16,
-    fontSize: 16,
-    color: '#666',
+    ...neumorphism.loadingText,
   },
   profileHeader: {
-    backgroundColor: '#4A90E2',
+    ...neumorphism.header,
     alignItems: 'center',
-    paddingVertical: 40,
-    paddingHorizontal: 20,
   },
   avatarContainer: {
-    width: 100,
-    height: 100,
-    borderRadius: 50,
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 16,
+    ...neumorphism.avatarLarge,
+    marginBottom: spacing.md,
   },
   profileImage: {
-    width: 100,
-    height: 100,
-    borderRadius: 50,
+    width: 120,
+    height: 120,
+    borderRadius: 60,
   },
   userName: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#FFFFFF',
-    marginBottom: 4,
+    ...typography.h2,
+    color: colors.surface,
+    marginBottom: spacing.xs,
   },
   userEmail: {
-    fontSize: 16,
+    ...typography.body1,
     color: 'rgba(255, 255, 255, 0.9)',
-    marginBottom: 8,
+    marginBottom: spacing.sm,
   },
   userRole: {
-    fontSize: 14,
-    color: 'rgba(255, 255, 255, 0.8)',
+    ...typography.caption,
+    color: 'rgba(255, 255, 255, 0.9)',
     backgroundColor: 'rgba(255, 255, 255, 0.2)',
-    paddingHorizontal: 12,
-    paddingVertical: 4,
-    borderRadius: 12,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.xs,
+    borderRadius: borderRadius.md,
+    fontWeight: '600',
   },
   section: {
-    margin: 16,
-    backgroundColor: '#FFFFFF',
-    borderRadius: 12,
-    padding: 20,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
+    ...neumorphism.card,
+    margin: spacing.md,
   },
   sectionHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 16,
+    ...neumorphism.sectionHeader,
   },
   sectionTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#333',
+    ...neumorphism.sectionTitle,
   },
   editButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 6,
-    backgroundColor: '#E3F2FD',
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+    borderRadius: borderRadius.sm,
+    backgroundColor: colors.primarySoft,
+    ...shadows.subtle,
   },
   editButtonText: {
-    fontSize: 12,
-    color: '#4A90E2',
+    ...typography.caption,
+    color: colors.primary,
     fontWeight: '600',
-    marginLeft: 4,
+    marginLeft: spacing.xs,
   },
   infoItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 12,
+    paddingVertical: spacing.md,
     borderBottomWidth: 1,
-    borderBottomColor: '#F0F0F0',
+    borderBottomColor: colors.borderLight,
   },
   infoContent: {
     flex: 1,
-    marginLeft: 12,
+    marginLeft: spacing.md,
   },
   infoLabel: {
-    fontSize: 12,
-    color: '#999',
-    marginBottom: 2,
+    ...typography.caption,
+    color: colors.textTertiary,
+    marginBottom: spacing.xs,
   },
   infoValue: {
-    fontSize: 16,
-    color: '#333',
+    ...typography.body1,
+    color: colors.textPrimary,
     fontWeight: '500',
   },
   actionItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: '#F0F0F0',
+    ...neumorphism.listItem,
+    marginBottom: spacing.sm,
   },
   actionText: {
     flex: 1,
-    fontSize: 16,
-    color: '#333',
-    marginLeft: 12,
+    ...typography.body1,
+    marginLeft: spacing.md,
   },
   logoutButton: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 16,
-    backgroundColor: '#FFEBEE',
-    borderRadius: 8,
+    paddingVertical: spacing.md,
+    backgroundColor: colors.errorSoft,
+    borderRadius: borderRadius.md,
+    ...shadows.elevated,
   },
   logoutText: {
-    fontSize: 16,
-    color: '#F44336',
+    ...typography.body1,
+    color: colors.error,
     fontWeight: '600',
-    marginLeft: 8,
+    marginLeft: spacing.sm,
   },
   modalOverlay: {
+    ...neumorphism.modalOverlay,
+  },
+  modalOverlayTouch: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    justifyContent: 'flex-end',
   },
   modalContent: {
-    backgroundColor: '#FFFFFF',
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-    maxHeight: '80%',
+    ...neumorphism.modalContent,
   },
   modalHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: 20,
-    borderBottomWidth: 1,
-    borderBottomColor: '#E0E0E0',
+    ...neumorphism.modalHeader,
   },
   modalTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#333',
+    ...neumorphism.modalTitle,
   },
   modalBody: {
-    padding: 20,
+    ...neumorphism.modalBody,
   },
-  inputContainer: {
-    marginBottom: 20,
+  formInputContainer: {
+    marginBottom: spacing.lg,
   },
   inputLabel: {
-    fontSize: 14,
+    ...typography.body2,
     fontWeight: '600',
-    color: '#333',
-    marginBottom: 8,
+    color: colors.textPrimary,
+    marginBottom: spacing.sm,
+  },
+  inputWrapper: {
+    ...neumorphism.inputContainer,
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 0,
+  },
+  inputIcon: {
+    marginRight: spacing.md,
+  },
+  inputIconTop: {
+    marginRight: spacing.md,
+    alignSelf: 'flex-start',
+    marginTop: spacing.md,
   },
   input: {
-    borderWidth: 1,
-    borderColor: '#E0E0E0',
-    borderRadius: 8,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
+    flex: 1,
+    height: 50,
     fontSize: 16,
-    backgroundColor: '#FAFAFA',
+    color: colors.textPrimary,
+  },
+  textAreaWrapper: {
+    alignItems: 'flex-start',
   },
   textArea: {
     height: 80,
     textAlignVertical: 'top',
+    paddingTop: spacing.md,
   },
   modalFooter: {
-    flexDirection: 'row',
-    padding: 20,
-    borderTopWidth: 1,
-    borderTopColor: '#E0E0E0',
+    ...neumorphism.modalFooter,
   },
   cancelButton: {
+    ...neumorphism.buttonSecondary,
     flex: 1,
-    paddingVertical: 12,
-    marginRight: 8,
-    borderRadius: 8,
-    backgroundColor: '#F5F5F5',
-    alignItems: 'center',
+    marginRight: spacing.sm,
   },
   cancelButtonText: {
-    fontSize: 16,
-    color: '#666',
-    fontWeight: '600',
+    ...neumorphism.buttonSecondaryText,
   },
   saveButton: {
+    ...neumorphism.button,
     flex: 1,
-    paddingVertical: 12,
-    marginLeft: 8,
-    borderRadius: 8,
-    backgroundColor: '#4A90E2',
-    alignItems: 'center',
+    marginLeft: spacing.sm,
   },
   saveButtonText: {
-    fontSize: 16,
-    color: '#FFFFFF',
-    fontWeight: '600',
+    ...neumorphism.buttonText,
   },
   passwordInfo: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#E3F2FD',
-    padding: 16,
-    borderRadius: 8,
-    marginBottom: 20,
+    backgroundColor: colors.infoSoft,
+    padding: spacing.md,
+    borderRadius: borderRadius.md,
+    marginBottom: spacing.lg,
+    ...shadows.subtle,
   },
   passwordInfoText: {
     flex: 1,
-    fontSize: 14,
-    color: '#1976D2',
-    marginLeft: 12,
+    ...typography.body2,
+    color: colors.info,
+    marginLeft: spacing.md,
     lineHeight: 20,
   },
 });

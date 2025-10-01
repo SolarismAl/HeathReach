@@ -13,7 +13,19 @@ class ApiWithOfflineService {
         return { success: false, message: 'No internet connection. Please try again when online.' };
       }
 
-      const response = await apiService.login(email, password);
+      // First authenticate with Firebase to get ID token
+      const { default: CustomAuthService } = await import('./auth-service');
+      const firebaseResult = await CustomAuthService.signInWithEmail(email, password);
+      
+      if (!firebaseResult.success || !firebaseResult.user) {
+        return { success: false, message: firebaseResult.error || 'Firebase authentication failed' };
+      }
+
+      // Get Firebase ID token
+      const idToken = await firebaseResult.user.getIdToken();
+      
+      // Now call API service with the ID token
+      const response = await apiService.login(idToken);
       
       if (response.success && response.data) {
         // Cache user data for offline access

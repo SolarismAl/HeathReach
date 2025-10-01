@@ -9,6 +9,7 @@ import {
 } from 'react-native';
 import { router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
+import { neumorphism, colors, spacing, borderRadius, typography, shadows } from '../../styles/neumorphism';
 
 export default function AboutHealthReachScreen() {
   const handleContactPress = (type: 'email' | 'phone' | 'website') => {
@@ -178,25 +179,23 @@ export default function AboutHealthReachScreen() {
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
-    backgroundColor: '#F8F9FA',
+    ...neumorphism.container,
   },
   header: {
-    backgroundColor: '#4A90E2',
+    backgroundColor: colors.primary,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingTop: 50,
-    paddingBottom: 16,
-    paddingHorizontal: 16,
+    paddingTop: spacing.xxl + spacing.md,
+    paddingBottom: spacing.md,
+    paddingHorizontal: spacing.md,
   },
   backButton: {
-    padding: 8,
+    padding: spacing.sm,
   },
   headerTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#FFFFFF',
+    ...typography.h6,
+    color: colors.surface,
   },
   placeholder: {
     width: 40,
@@ -206,112 +205,92 @@ const styles = StyleSheet.create({
   },
   logoContainer: {
     alignItems: 'center',
-    paddingVertical: 40,
-    backgroundColor: '#FFFFFF',
-    marginBottom: 16,
+    paddingVertical: spacing.xl,
+    backgroundColor: colors.background,
+    marginBottom: spacing.md,
   },
   logoCircle: {
     width: 100,
     height: 100,
     borderRadius: 50,
-    backgroundColor: '#4A90E2',
+    backgroundColor: colors.primary,
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 16,
+    marginBottom: spacing.md,
+    ...shadows.elevated,
   },
   appName: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    color: '#333',
-    marginBottom: 4,
+    ...typography.h2,
+    marginBottom: spacing.xs,
   },
   version: {
-    fontSize: 14,
-    color: '#666',
+    ...typography.body2,
   },
   section: {
-    backgroundColor: '#FFFFFF',
-    marginHorizontal: 16,
-    marginBottom: 16,
-    borderRadius: 12,
-    padding: 20,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
+    ...neumorphism.card,
+    marginHorizontal: spacing.md,
+    marginBottom: spacing.md,
   },
   sectionHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 16,
+    ...neumorphism.sectionHeader,
   },
   sectionTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#333',
-    marginLeft: 8,
+    ...neumorphism.sectionTitle,
+    marginLeft: spacing.sm,
   },
   sectionText: {
-    fontSize: 16,
-    color: '#666',
+    ...typography.body1,
     lineHeight: 24,
   },
   featureItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 8,
+    paddingVertical: spacing.sm,
   },
   featureText: {
-    fontSize: 16,
-    color: '#333',
-    marginLeft: 12,
+    ...typography.body1,
+    marginLeft: spacing.md,
   },
   contactItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 12,
+    paddingVertical: spacing.md,
     borderBottomWidth: 1,
-    borderBottomColor: '#F0F0F0',
+    borderBottomColor: colors.borderLight,
   },
   contactContent: {
     flex: 1,
-    marginLeft: 12,
+    marginLeft: spacing.md,
   },
   contactLabel: {
-    fontSize: 14,
-    color: '#666',
-    marginBottom: 2,
+    ...typography.body2,
+    marginBottom: spacing.xs,
   },
   contactValue: {
-    fontSize: 16,
-    color: '#333',
+    ...typography.body1,
     fontWeight: '500',
   },
   legalItem: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingVertical: 16,
+    paddingVertical: spacing.md,
     borderBottomWidth: 1,
-    borderBottomColor: '#F0F0F0',
+    borderBottomColor: colors.borderLight,
   },
   legalText: {
-    fontSize: 16,
-    color: '#333',
+    ...typography.body1,
   },
   footer: {
     alignItems: 'center',
-    paddingVertical: 32,
-    paddingHorizontal: 20,
+    paddingVertical: spacing.xl,
+    paddingHorizontal: spacing.lg,
   },
   footerText: {
-    fontSize: 14,
-    color: '#666',
-    marginBottom: 4,
+    ...typography.body2,
+    marginBottom: spacing.xs,
   },
   footerSubtext: {
-    fontSize: 12,
-    color: '#999',
+    ...typography.caption,
   },
 });
