@@ -13,6 +13,7 @@ import {
   KeyboardAvoidingView,
   Platform,
   SafeAreaView,
+  StatusBar,
 } from 'react-native';
 import { router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -319,8 +320,9 @@ export default function ProfileScreen() {
   if (loading) {
     return (
       <SafeAreaView style={styles.safeArea}>
+        <StatusBar barStyle="light-content" backgroundColor={colors.primary} translucent={false} />
         <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#4A90E2" />
+        <ActivityIndicator size="large" color="#FFFFFF" />
         <Text style={styles.loadingText}>Loading profile...</Text>
         </View>
       </SafeAreaView>
@@ -333,6 +335,7 @@ export default function ProfileScreen() {
   
   return (
     <SafeAreaView style={styles.safeArea}>
+      <StatusBar barStyle="light-content" backgroundColor={colors.primary} translucent={false} />
       <ScrollView style={styles.container}>
       {/* Profile Header */}
       <View style={styles.profileHeader}>
@@ -793,24 +796,38 @@ export default function ProfileScreen() {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: colors.background,
+    backgroundColor: colors.primary,
   },
   container: {
-    ...neumorphism.container,
+    flex: 1,
   },
   loadingContainer: {
-    ...neumorphism.loadingContainer,
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   loadingText: {
-    ...neumorphism.loadingText,
+    ...typography.body1,
+    color: '#FFFFFF',
+    marginTop: spacing.md,
   },
   profileHeader: {
-    ...neumorphism.header,
+    backgroundColor: colors.primary,
+    padding: spacing.lg,
+    paddingTop: spacing.xl,
+    paddingBottom: spacing.xxl,
     alignItems: 'center',
   },
   avatarContainer: {
-    ...neumorphism.avatarLarge,
+    width: 120,
+    height: 120,
+    borderRadius: 60,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    justifyContent: 'center',
+    alignItems: 'center',
     marginBottom: spacing.md,
+    borderWidth: 3,
+    borderColor: 'rgba(255, 255, 255, 0.3)',
   },
   profileImage: {
     width: 120,
@@ -837,14 +854,21 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   section: {
-    ...neumorphism.card,
+    backgroundColor: '#FFFFFF',
+    borderRadius: borderRadius.lg,
+    padding: spacing.lg,
     margin: spacing.md,
+    ...shadows.subtle,
   },
   sectionHeader: {
-    ...neumorphism.sectionHeader,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: spacing.md,
   },
   sectionTitle: {
-    ...neumorphism.sectionTitle,
+    ...typography.h6,
+    fontWeight: '600',
   },
   editButton: {
     flexDirection: 'row',
@@ -883,8 +907,14 @@ const styles = StyleSheet.create({
     fontWeight: '500',
   },
   actionItem: {
-    ...neumorphism.listItem,
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: spacing.md,
+    backgroundColor: '#F5F7FA',
+    borderRadius: borderRadius.md,
     marginBottom: spacing.sm,
+    borderWidth: 1,
+    borderColor: '#E0E0E0',
   },
   actionText: {
     flex: 1,

@@ -11,6 +11,7 @@ import {
   FlatList,
   ActivityIndicator,
   SafeAreaView,
+  StatusBar,
 } from 'react-native';
 import { router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -18,6 +19,7 @@ import { Calendar } from 'react-native-calendars';
 import apiService from '../../services/api';
 import notificationService from '../../services/notifications';
 import FirebaseAuthService from '../../services/firebase';
+import { colors } from '../../styles/neumorphism';
 import { useAuth } from '../../contexts/AuthContext';
 import { HealthCenter, Service, CreateAppointmentData } from '../../types';
 
@@ -258,6 +260,7 @@ export default function BookAppointmentScreen() {
 
   return (
     <SafeAreaView style={styles.safeArea}>
+      <StatusBar barStyle="light-content" backgroundColor={colors.primary} translucent={false} />
       <ScrollView style={styles.container}>
       {/* Error Message */}
       {error && (
@@ -621,7 +624,7 @@ export default function BookAppointmentScreen() {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#F8F9FA',
+    backgroundColor: colors.primary,
   },
   container: {
     flex: 1,

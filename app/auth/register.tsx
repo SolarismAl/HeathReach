@@ -10,6 +10,7 @@ import {
   KeyboardAvoidingView,
   Platform,
   ScrollView,
+  StatusBar,
 } from 'react-native';
 import { router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -106,6 +107,7 @@ export default function RegisterScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
+      <StatusBar barStyle="light-content" backgroundColor={colors.primary} translucent={false} />
       <KeyboardAvoidingView 
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={styles.keyboardView}
@@ -114,10 +116,10 @@ export default function RegisterScreen() {
           {/* Header */}
           <View style={styles.header}>
             <TouchableOpacity onPress={navigateToLogin} style={styles.backButton}>
-              <Ionicons name="arrow-back" size={24} color="#4A90E2" />
+              <Ionicons name="arrow-back" size={24} color="#FFFFFF" />
             </TouchableOpacity>
             <View style={styles.logoContainer}>
-              <Ionicons name="person-add" size={50} color="#4A90E2" />
+              <Ionicons name="person-add" size={50} color="#FFFFFF" />
             </View>
             <Text style={styles.title}>Create Account</Text>
             <Text style={styles.subtitle}>Join HealthReach today</Text>
@@ -319,7 +321,7 @@ export default function RegisterScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.background,
+    backgroundColor: colors.primary,
   },
   keyboardView: {
     flex: 1,
@@ -338,22 +340,27 @@ const styles = StyleSheet.create({
     left: 0,
     top: spacing.lg,
     padding: spacing.sm,
-    ...neumorphism.iconContainerSmall,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    borderRadius: borderRadius.md,
   },
   logoContainer: {
-    ...neumorphism.iconContainerLarge,
     width: 80,
     height: 80,
     borderRadius: 40,
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    justifyContent: 'center',
+    alignItems: 'center',
     marginBottom: spacing.lg,
     marginTop: spacing.xl,
   },
   title: {
     ...typography.h2,
+    color: '#FFFFFF',
     marginBottom: spacing.sm,
   },
   subtitle: {
     ...typography.body1,
+    color: 'rgba(255, 255, 255, 0.8)',
     textAlign: 'center',
   },
   form: {
@@ -361,16 +368,23 @@ const styles = StyleSheet.create({
     paddingTop: spacing.lg,
   },
   inputContainer: {
-    ...neumorphism.inputContainer,
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FFFFFF',
+    borderRadius: borderRadius.lg,
+    paddingHorizontal: spacing.md,
+    marginBottom: spacing.md,
+    ...shadows.elevated,
   },
   inputIcon: {
     marginRight: spacing.md,
+    color: colors.primary,
   },
   input: {
     flex: 1,
     height: 50,
     fontSize: 16,
-    color: colors.textPrimary,
+    color: '#333333',
   },
   eyeIcon: {
     padding: spacing.xs,
@@ -381,6 +395,7 @@ const styles = StyleSheet.create({
   roleLabel: {
     ...typography.body1,
     fontWeight: '600',
+    color: '#FFFFFF',
     marginBottom: spacing.md,
   },
   roleButtons: {
@@ -395,12 +410,13 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.md,
     paddingHorizontal: spacing.md,
     borderRadius: borderRadius.md,
-    backgroundColor: colors.background,
+    backgroundColor: '#FFFFFF',
     ...shadows.elevated,
   },
   roleButtonActive: {
-    backgroundColor: colors.primary,
-    ...shadows.pressed,
+    backgroundColor: 'rgba(255, 255, 255, 0.3)',
+    borderWidth: 2,
+    borderColor: '#FFFFFF',
   },
   roleButtonText: {
     marginLeft: spacing.sm,
@@ -409,19 +425,25 @@ const styles = StyleSheet.create({
     color: colors.primary,
   },
   roleButtonTextActive: {
-    color: colors.surface,
+    color: '#FFFFFF',
   },
   registerButton: {
-    ...neumorphism.button,
+    backgroundColor: '#FFFFFF',
+    paddingVertical: spacing.md + spacing.xs,
+    borderRadius: borderRadius.round,
+    alignItems: 'center',
     marginTop: spacing.lg,
     marginBottom: spacing.md,
+    ...shadows.elevated,
   },
   registerButtonDisabled: {
-    backgroundColor: colors.textDisabled,
+    backgroundColor: 'rgba(255, 255, 255, 0.5)',
     ...shadows.subtle,
   },
   registerButtonText: {
-    ...neumorphism.buttonText,
+    fontSize: 16,
+    fontWeight: '600',
+    color: colors.primary,
   },
   footer: {
     flexDirection: 'row',
@@ -432,10 +454,11 @@ const styles = StyleSheet.create({
   },
   footerText: {
     ...typography.body2,
+    color: 'rgba(255, 255, 255, 0.8)',
   },
   signInText: {
     ...typography.body2,
-    color: colors.primary,
+    color: '#FFFFFF',
     fontWeight: 'bold',
   },
   divider: {
@@ -446,27 +469,34 @@ const styles = StyleSheet.create({
   dividerLine: {
     flex: 1,
     height: 1,
-    backgroundColor: colors.border,
+    backgroundColor: 'rgba(255, 255, 255, 0.3)',
   },
   dividerText: {
     marginHorizontal: spacing.md,
     ...typography.body2,
+    color: 'rgba(255, 255, 255, 0.8)',
     fontWeight: '500',
   },
   googleButton: {
-    ...neumorphism.buttonSecondary,
+    backgroundColor: '#FFFFFF',
+    paddingVertical: spacing.md + spacing.xs,
+    borderRadius: borderRadius.round,
     flexDirection: 'row',
     justifyContent: 'center',
+    alignItems: 'center',
     marginBottom: spacing.md,
+    ...shadows.elevated,
   },
   googleButtonDisabled: {
-    backgroundColor: colors.surfaceDark,
+    backgroundColor: 'rgba(255, 255, 255, 0.5)',
     ...shadows.subtle,
   },
   googleIcon: {
     marginRight: spacing.md,
   },
   googleButtonText: {
-    ...neumorphism.buttonSecondaryText,
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#333333',
   },
 });

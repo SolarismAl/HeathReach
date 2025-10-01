@@ -10,6 +10,7 @@ import {
   KeyboardAvoidingView,
   Platform,
   ScrollView,
+  StatusBar,
 } from 'react-native';
 import { router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -59,6 +60,7 @@ export default function ForgotPasswordScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
+      <StatusBar barStyle="light-content" backgroundColor={colors.primary} translucent={false} />
       <KeyboardAvoidingView 
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={styles.keyboardView}
@@ -67,10 +69,10 @@ export default function ForgotPasswordScreen() {
           {/* Header */}
           <View style={styles.header}>
             <TouchableOpacity onPress={navigateToLogin} style={styles.backButton}>
-              <Ionicons name="arrow-back" size={24} color="#4A90E2" />
+              <Ionicons name="arrow-back" size={24} color="#FFFFFF" />
             </TouchableOpacity>
             <View style={styles.logoContainer}>
-              <Ionicons name="mail" size={50} color="#4A90E2" />
+              <Ionicons name="mail" size={50} color="#FFFFFF" />
             </View>
             <Text style={styles.title}>Forgot Password?</Text>
             <Text style={styles.subtitle}>
@@ -140,7 +142,7 @@ export default function ForgotPasswordScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.background,
+    backgroundColor: colors.primary,
   },
   keyboardView: {
     flex: 1,
@@ -159,22 +161,27 @@ const styles = StyleSheet.create({
     left: 0,
     top: spacing.lg,
     padding: spacing.sm,
-    ...neumorphism.iconContainerSmall,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    borderRadius: borderRadius.md,
   },
   logoContainer: {
-    ...neumorphism.iconContainerLarge,
     width: 80,
     height: 80,
     borderRadius: 40,
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    justifyContent: 'center',
+    alignItems: 'center',
     marginBottom: spacing.lg,
     marginTop: spacing.xl,
   },
   title: {
     ...typography.h2,
+    color: '#FFFFFF',
     marginBottom: spacing.md,
   },
   subtitle: {
     ...typography.body1,
+    color: 'rgba(255, 255, 255, 0.8)',
     textAlign: 'center',
     lineHeight: 22,
     paddingHorizontal: spacing.lg,
@@ -184,42 +191,55 @@ const styles = StyleSheet.create({
     paddingTop: spacing.xl,
   },
   inputContainer: {
-    ...neumorphism.inputContainer,
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FFFFFF',
+    borderRadius: borderRadius.lg,
+    paddingHorizontal: spacing.md,
     marginBottom: spacing.lg,
+    ...shadows.elevated,
   },
   inputIcon: {
     marginRight: spacing.md,
+    color: colors.primary,
   },
   input: {
     flex: 1,
     height: 50,
     fontSize: 16,
-    color: colors.textPrimary,
+    color: '#333333',
   },
   resetButton: {
-    ...neumorphism.button,
+    backgroundColor: '#FFFFFF',
+    paddingVertical: spacing.md + spacing.xs,
+    borderRadius: borderRadius.round,
+    alignItems: 'center',
     marginBottom: spacing.lg,
+    ...shadows.elevated,
   },
   resetButtonDisabled: {
-    backgroundColor: colors.textDisabled,
+    backgroundColor: 'rgba(255, 255, 255, 0.5)',
     ...shadows.subtle,
   },
   resetButtonText: {
-    ...neumorphism.buttonText,
+    fontSize: 16,
+    fontWeight: '600',
+    color: colors.primary,
   },
   successContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: colors.successSoft,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
     padding: spacing.md,
     borderRadius: borderRadius.md,
     marginBottom: spacing.lg,
-    ...shadows.subtle,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.3)',
   },
   successText: {
     ...typography.body2,
-    color: colors.success,
+    color: '#FFFFFF',
     fontWeight: '500',
     marginLeft: spacing.sm,
     textAlign: 'center',
@@ -234,10 +254,11 @@ const styles = StyleSheet.create({
   },
   footerText: {
     ...typography.body2,
+    color: 'rgba(255, 255, 255, 0.8)',
   },
   signInText: {
     ...typography.body2,
-    color: colors.primary,
+    color: '#FFFFFF',
     fontWeight: 'bold',
   },
 });

@@ -179,7 +179,8 @@ export default function AboutHealthReachScreen() {
 
 const styles = StyleSheet.create({
   container: {
-    ...neumorphism.container,
+    flex: 1,
+    backgroundColor: '#F5F7FA',
   },
   header: {
     backgroundColor: colors.primary,
@@ -206,7 +207,7 @@ const styles = StyleSheet.create({
   logoContainer: {
     alignItems: 'center',
     paddingVertical: spacing.xl,
-    backgroundColor: colors.background,
+    backgroundColor: '#FFFFFF',
     marginBottom: spacing.md,
   },
   logoCircle: {
@@ -227,15 +228,21 @@ const styles = StyleSheet.create({
     ...typography.body2,
   },
   section: {
-    ...neumorphism.card,
+    backgroundColor: '#FFFFFF',
+    borderRadius: borderRadius.lg,
+    padding: spacing.lg,
     marginHorizontal: spacing.md,
     marginBottom: spacing.md,
+    ...shadows.subtle,
   },
   sectionHeader: {
-    ...neumorphism.sectionHeader,
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: spacing.md,
   },
   sectionTitle: {
-    ...neumorphism.sectionTitle,
+    ...typography.h6,
+    fontWeight: '600',
     marginLeft: spacing.sm,
   },
   sectionText: {

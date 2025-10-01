@@ -10,7 +10,7 @@ import {
   KeyboardAvoidingView,
   Platform,
   ScrollView,
-  useColorScheme,
+  StatusBar,
 } from 'react-native';
 import { router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -19,7 +19,6 @@ import GoogleSignInModal from '../../components/GoogleSignInModal';
 import Toast from '../../components/Toast';
 import { useToast } from '../../hooks/useToast';
 import { neumorphism, colors, spacing, borderRadius, typography, shadows } from '../../styles/neumorphism';
-import { useThemeColors } from '../../styles/darkMode';
 
 export default function LoginScreen() {
   const [email, setEmail] = useState('');
@@ -30,10 +29,6 @@ export default function LoginScreen() {
   const [googleLoading, setGoogleLoading] = useState(false);
   const { signInWithEmail, signInWithGoogle, loading } = useAuth();
   const { toast, showError, showSuccess, hideToast } = useToast();
-  
-  const themeColors = useThemeColors();
-  const colorScheme = useColorScheme();
-  const isDark = colorScheme === 'dark';
 
   const handleLogin = async () => {
     if (!email.trim() || !password.trim()) {
@@ -78,7 +73,8 @@ export default function LoginScreen() {
   };
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: themeColors.background }]}>
+    <SafeAreaView style={styles.container}>
+      <StatusBar barStyle="light-content" backgroundColor={colors.primary} translucent={false} />
       <KeyboardAvoidingView 
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={styles.keyboardView}
@@ -194,7 +190,7 @@ export default function LoginScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.background,
+    backgroundColor: colors.primary,
   },
   keyboardView: {
     flex: 1,
@@ -209,18 +205,22 @@ const styles = StyleSheet.create({
     paddingBottom: spacing.xl,
   },
   logoContainer: {
-    ...neumorphism.iconContainerLarge,
     width: 80,
     height: 80,
     borderRadius: 40,
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    justifyContent: 'center',
+    alignItems: 'center',
     marginBottom: spacing.lg,
   },
   title: {
     ...typography.h2,
+    color: '#FFFFFF',
     marginBottom: spacing.sm,
   },
   subtitle: {
     ...typography.body1,
+    color: 'rgba(255, 255, 255, 0.8)',
     textAlign: 'center',
   },
   form: {
@@ -228,38 +228,52 @@ const styles = StyleSheet.create({
     paddingTop: spacing.lg,
   },
   inputContainer: {
-    ...neumorphism.inputContainer,
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FFFFFF',
+    borderRadius: borderRadius.lg,
+    paddingHorizontal: spacing.md,
+    marginBottom: spacing.md,
+    ...shadows.elevated,
   },
   inputIcon: {
     marginRight: spacing.md,
+    color: colors.primary,
   },
   input: {
     flex: 1,
     height: 50,
     fontSize: 16,
-    color: colors.textPrimary,
+    color: '#333333',
   },
   eyeIcon: {
     padding: spacing.xs,
   },
   loginButton: {
-    ...neumorphism.button,
+    backgroundColor: '#FFFFFF',
+    paddingVertical: spacing.md + spacing.xs,
+    borderRadius: borderRadius.round,
+    alignItems: 'center',
     marginTop: spacing.lg,
     marginBottom: spacing.md,
+    ...shadows.elevated,
   },
   loginButtonDisabled: {
     backgroundColor: colors.textDisabled,
     ...shadows.subtle,
   },
   loginButtonText: {
-    ...neumorphism.buttonText,
+    fontSize: 16,
+    fontWeight: '600',
+    color: colors.primary,
   },
   forgotPassword: {
     alignItems: 'center',
   },
   forgotPasswordText: {
     ...typography.body2,
-    color: colors.primary,
+    color: '#FFFFFF',
+    textDecorationLine: 'underline',
   },
   footer: {
     flexDirection: 'row',
@@ -270,10 +284,11 @@ const styles = StyleSheet.create({
   },
   footerText: {
     ...typography.body2,
+    color: 'rgba(255, 255, 255, 0.8)',
   },
   signUpText: {
     ...typography.body2,
-    color: colors.primary,
+    color: '#FFFFFF',
     fontWeight: 'bold',
   },
   divider: {
@@ -284,27 +299,34 @@ const styles = StyleSheet.create({
   dividerLine: {
     flex: 1,
     height: 1,
-    backgroundColor: colors.border,
+    backgroundColor: 'rgba(255, 255, 255, 0.3)',
   },
   dividerText: {
     marginHorizontal: spacing.md,
     ...typography.body2,
+    color: 'rgba(255, 255, 255, 0.8)',
     fontWeight: '500',
   },
   googleButton: {
-    ...neumorphism.buttonSecondary,
+    backgroundColor: '#FFFFFF',
+    paddingVertical: spacing.md + spacing.xs,
+    borderRadius: borderRadius.round,
     flexDirection: 'row',
     justifyContent: 'center',
+    alignItems: 'center',
     marginBottom: spacing.md,
+    ...shadows.elevated,
   },
   googleButtonDisabled: {
-    backgroundColor: colors.surfaceDark,
+    backgroundColor: 'rgba(255, 255, 255, 0.5)',
     ...shadows.subtle,
   },
   googleIcon: {
     marginRight: spacing.md,
   },
   googleButtonText: {
-    ...neumorphism.buttonSecondaryText,
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#333333',
   },
 });

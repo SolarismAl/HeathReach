@@ -1,22 +1,18 @@
 import { Tabs } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { useColorScheme } from 'react-native';
-import { useThemeColors } from '../../styles/darkMode';
+import { colors } from '../../styles/neumorphism';
 
 export default function PatientLayout() {
-  const colorScheme = useColorScheme();
-  const colors = useThemeColors();
-  const isDark = colorScheme === 'dark';
 
   return (
     <Tabs
       screenOptions={{
         tabBarActiveTintColor: colors.primary,
-        tabBarInactiveTintColor: colors.textSecondary,
+        tabBarInactiveTintColor: '#999999',
         tabBarStyle: {
-          backgroundColor: colors.surface,
+          backgroundColor: '#FFFFFF',
           borderTopWidth: 1,
-          borderTopColor: colors.border,
+          borderTopColor: '#E0E0E0',
           paddingBottom: 8,
           paddingTop: 8,
           height: 70,
@@ -33,7 +29,7 @@ export default function PatientLayout() {
           fontWeight: 'bold',
         },
         sceneStyle: {
-          backgroundColor: colors.background,
+          backgroundColor: colors.primary,
         },
       }}
     >

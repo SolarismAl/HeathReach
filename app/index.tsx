@@ -7,6 +7,7 @@ import {
   SafeAreaView,
   Dimensions,
   ActivityIndicator,
+  StatusBar,
 } from 'react-native';
 import { router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -73,6 +74,7 @@ export default function LandingPage() {
 
   return (
     <SafeAreaView style={styles.container}>
+      <StatusBar barStyle="light-content" backgroundColor={colors.primary} translucent={false} />
       <View style={styles.gradient}>
         {/* Background Health Icons */}
         <View style={styles.backgroundIcons}>

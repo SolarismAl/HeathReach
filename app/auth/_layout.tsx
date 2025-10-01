@@ -1,16 +1,14 @@
 import { Stack } from 'expo-router';
-import { useColorScheme } from 'react-native';
-import { useThemeColors } from '../../styles/darkMode';
+import { colors } from '../../styles/neumorphism';
 
 export default function AuthLayout() {
-  const colors = useThemeColors();
 
   return (
     <Stack
       screenOptions={{
         headerShown: false,
         contentStyle: {
-          backgroundColor: colors.background,
+          backgroundColor: colors.primary,
         },
       }}
     >

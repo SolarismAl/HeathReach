@@ -246,21 +246,26 @@ export default function NotificationsScreen() {
 
 const styles = StyleSheet.create({
   container: {
-    ...neumorphism.container,
+    flex: 1,
+    backgroundColor: '#F5F7FA',
   },
   loadingContainer: {
-    ...neumorphism.loadingContainer,
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   loadingText: {
-    ...neumorphism.loadingText,
+    ...typography.body1,
+    color: colors.textSecondary,
+    marginTop: spacing.md,
     fontWeight: '500',
   },
   headerActions: {
-    backgroundColor: colors.surface,
+    backgroundColor: '#FFFFFF',
     paddingVertical: spacing.md,
     paddingHorizontal: spacing.md,
     borderBottomWidth: 1,
-    borderBottomColor: colors.borderLight,
+    borderBottomColor: '#E0E0E0',
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
@@ -273,12 +278,13 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.sm,
     marginRight: spacing.sm,
     borderRadius: borderRadius.xl,
-    backgroundColor: colors.background,
-    ...shadows.elevated,
+    backgroundColor: '#F5F7FA',
+    borderWidth: 1,
+    borderColor: '#E0E0E0',
   },
   filterButtonActive: {
     backgroundColor: colors.primary,
-    ...shadows.pressed,
+    borderColor: colors.primary,
   },
   filterButtonText: {
     ...typography.body2,
@@ -304,8 +310,11 @@ const styles = StyleSheet.create({
     padding: spacing.md,
   },
   notificationCard: {
-    ...neumorphism.card,
+    backgroundColor: '#FFFFFF',
+    borderRadius: borderRadius.lg,
+    padding: spacing.lg,
     marginBottom: spacing.md,
+    ...shadows.subtle,
   },
   unreadNotification: {
     borderLeftWidth: 4,
@@ -317,10 +326,12 @@ const styles = StyleSheet.create({
     marginBottom: spacing.sm,
   },
   notificationIcon: {
-    ...neumorphism.iconContainerSmall,
     width: 40,
     height: 40,
     borderRadius: 20,
+    backgroundColor: colors.primarySoft,
+    justifyContent: 'center',
+    alignItems: 'center',
     marginRight: spacing.md,
   },
   notificationContent: {
@@ -350,11 +361,12 @@ const styles = StyleSheet.create({
     marginBottom: spacing.sm,
   },
   appointmentData: {
-    backgroundColor: colors.background,
+    backgroundColor: '#F5F7FA',
     padding: spacing.md,
     borderRadius: borderRadius.md,
     marginTop: spacing.xs,
-    ...shadows.pressed,
+    borderWidth: 1,
+    borderColor: '#E0E0E0',
   },
   appointmentDataText: {
     ...typography.body2,
@@ -365,12 +377,19 @@ const styles = StyleSheet.create({
     ...typography.caption,
   },
   emptyState: {
-    ...neumorphism.emptyState,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: spacing.xxl,
   },
   emptyStateTitle: {
-    ...neumorphism.emptyStateTitle,
+    ...typography.h6,
+    color: colors.textPrimary,
+    marginTop: spacing.md,
+    marginBottom: spacing.sm,
   },
   emptyStateText: {
-    ...neumorphism.emptyStateText,
+    ...typography.body2,
+    color: colors.textSecondary,
+    textAlign: 'center',
   },
 });

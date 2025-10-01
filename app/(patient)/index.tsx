@@ -8,6 +8,7 @@ import {
   RefreshControl,
   Alert,
   SafeAreaView,
+  StatusBar,
 } from 'react-native';
 import { router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -141,9 +142,10 @@ export default function PatientDashboard() {
   return (
     <ProtectedRoute allowedRoles={['patient']}>
       <SafeAreaView style={styles.safeArea}>
+        <StatusBar barStyle="light-content" backgroundColor={colors.primary} translucent={false} />
         {loading ? (
           <View style={styles.loadingContainer}>
-            <Ionicons name="medical" size={50} color="#4A90E2" />
+            <Ionicons name="medical" size={50} color="#FFFFFF" />
             <Text style={styles.loadingText}>Loading your dashboard...</Text>
           </View>
         ) : (
@@ -332,19 +334,26 @@ export default function PatientDashboard() {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: colors.background,
+    backgroundColor: colors.primary,
   },
   container: {
-    ...neumorphism.container,
+    flex: 1,
   },
   loadingContainer: {
-    ...neumorphism.loadingContainer,
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   loadingText: {
-    ...neumorphism.loadingText,
+    ...typography.body1,
+    color: '#FFFFFF',
+    marginTop: spacing.md,
   },
   welcomeSection: {
-    ...neumorphism.header,
+    backgroundColor: colors.primary,
+    padding: spacing.lg,
+    paddingTop: spacing.xl,
+    paddingBottom: spacing.xxl,
   },
   welcomeText: {
     ...typography.h3,
@@ -372,10 +381,10 @@ const styles = StyleSheet.create({
   },
   quickActionsSection: {
     padding: spacing.lg,
-    backgroundColor: colors.background,
-    marginTop: -spacing.md,
+    backgroundColor: '#FFFFFF',
+    marginTop: -spacing.xl,
     marginHorizontal: spacing.md,
-    borderRadius: borderRadius.lg,
+    borderRadius: borderRadius.xl,
     ...shadows.floating,
   },
   sectionTitle: {
@@ -388,15 +397,20 @@ const styles = StyleSheet.create({
   },
   quickActionCard: {
     width: '48%',
-    backgroundColor: colors.background,
+    backgroundColor: '#F5F7FA',
     padding: spacing.md,
     borderRadius: borderRadius.md,
     alignItems: 'center',
     marginBottom: spacing.md,
-    ...shadows.elevated,
+    ...shadows.subtle,
   },
   quickActionIcon: {
-    ...neumorphism.iconContainer,
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: colors.primarySoft,
+    justifyContent: 'center',
+    alignItems: 'center',
     marginBottom: spacing.sm,
   },
   quickActionText: {
@@ -405,11 +419,17 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   section: {
-    ...neumorphism.card,
+    backgroundColor: '#FFFFFF',
+    borderRadius: borderRadius.lg,
+    padding: spacing.lg,
     margin: spacing.md,
+    ...shadows.subtle,
   },
   sectionHeader: {
-    ...neumorphism.sectionHeader,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: spacing.md,
   },
   viewAllText: {
     ...typography.body2,
@@ -417,11 +437,12 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   appointmentCard: {
-    backgroundColor: colors.background,
+    backgroundColor: '#F5F7FA',
     padding: spacing.md,
     borderRadius: borderRadius.md,
     marginBottom: spacing.md,
-    ...shadows.pressed,
+    borderWidth: 1,
+    borderColor: '#E0E0E0',
   },
   appointmentHeader: {
     flexDirection: 'row',
@@ -441,35 +462,37 @@ const styles = StyleSheet.create({
     color: colors.textSecondary,
   },
   statusBadge: {
-    ...neumorphism.badge,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: spacing.xs,
+    borderRadius: borderRadius.sm,
   },
   confirmedBadge: {
-    ...neumorphism.badgeSuccess,
+    backgroundColor: '#E8F5E8',
   },
   pendingBadge: {
-    ...neumorphism.badgeWarning,
+    backgroundColor: '#FFF3E0',
   },
   cancelledBadge: {
-    ...neumorphism.badgeError,
+    backgroundColor: '#FFEBEE',
   },
   completedBadge: {
-    ...neumorphism.badgeInfo,
+    backgroundColor: '#E3F2FD',
   },
   statusText: {
-    ...neumorphism.badgeText,
     fontSize: 10,
+    fontWeight: '600',
   },
   confirmedText: {
-    ...neumorphism.badgeSuccessText,
+    color: '#2E7D32',
   },
   pendingText: {
-    ...neumorphism.badgeWarningText,
+    color: '#F57C00',
   },
   cancelledText: {
-    ...neumorphism.badgeErrorText,
+    color: '#D32F2F',
   },
   completedText: {
-    ...neumorphism.badgeInfoText,
+    color: '#1976D2',
   },
   appointmentService: {
     ...typography.body1,
@@ -494,13 +517,19 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'flex-start',
     padding: spacing.md,
-    backgroundColor: colors.background,
+    backgroundColor: '#F5F7FA',
     borderRadius: borderRadius.md,
     marginBottom: spacing.sm,
-    ...shadows.pressed,
+    borderWidth: 1,
+    borderColor: '#E0E0E0',
   },
   notificationIcon: {
-    ...neumorphism.iconContainerSmall,
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: colors.primarySoft,
+    justifyContent: 'center',
+    alignItems: 'center',
     marginRight: spacing.md,
   },
   notificationContent: {
@@ -527,19 +556,26 @@ const styles = StyleSheet.create({
     marginTop: spacing.xs,
   },
   emptyState: {
-    ...neumorphism.emptyState,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: spacing.xl,
   },
   emptyStateText: {
-    ...neumorphism.emptyStateText,
+    ...typography.body2,
+    color: colors.textSecondary,
+    textAlign: 'center',
+    marginTop: spacing.md,
   },
   bookNowButton: {
-    ...neumorphism.button,
+    backgroundColor: colors.primary,
     paddingHorizontal: spacing.lg,
     paddingVertical: spacing.sm,
     borderRadius: borderRadius.xl,
+    ...shadows.elevated,
   },
   bookNowText: {
-    ...neumorphism.buttonText,
+    color: '#FFFFFF',
     fontSize: 12,
+    fontWeight: '600',
   },
 });

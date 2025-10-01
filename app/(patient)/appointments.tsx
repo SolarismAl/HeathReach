@@ -5,10 +5,12 @@ import {
   StyleSheet,
   FlatList,
   TouchableOpacity,
+  ScrollView,
   RefreshControl,
   Alert,
   ActivityIndicator,
   SafeAreaView,
+  StatusBar,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import apiService from '../../services/api';
@@ -227,6 +229,7 @@ export default function AppointmentHistoryScreen() {
   return (
     <ProtectedRoute allowedRoles={['patient']}>
       <SafeAreaView style={styles.safeArea}>
+        <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" translucent={false} />
         <View style={styles.container}>
       {/* Filter Buttons */}
       <View style={styles.filterContainer}>
@@ -295,29 +298,31 @@ export default function AppointmentHistoryScreen() {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: colors.background,
+    backgroundColor: colors.primary,
   },
   container: {
-    ...neumorphism.container,
+    flex: 1,
+    backgroundColor: '#F5F7FA',
   },
   filterContainer: {
-    backgroundColor: colors.surface,
+    backgroundColor: '#FFFFFF',
     paddingVertical: spacing.md,
     paddingHorizontal: spacing.md,
     borderBottomWidth: 1,
-    borderBottomColor: colors.borderLight,
+    borderBottomColor: '#E0E0E0',
   },
   filterButton: {
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.sm,
     marginRight: spacing.sm,
     borderRadius: borderRadius.xl,
-    backgroundColor: colors.background,
-    ...shadows.elevated,
+    backgroundColor: '#F5F7FA',
+    borderWidth: 1,
+    borderColor: '#E0E0E0',
   },
   filterButtonActive: {
     backgroundColor: colors.primary,
-    ...shadows.pressed,
+    borderColor: colors.primary,
   },
   filterButtonText: {
     ...typography.body2,
@@ -331,8 +336,11 @@ const styles = StyleSheet.create({
     padding: spacing.md,
   },
   appointmentCard: {
-    ...neumorphism.card,
+    backgroundColor: '#FFFFFF',
+    borderRadius: borderRadius.lg,
+    padding: spacing.lg,
     marginBottom: spacing.md,
+    ...shadows.subtle,
   },
   appointmentHeader: {
     flexDirection: 'row',
@@ -352,12 +360,15 @@ const styles = StyleSheet.create({
     marginTop: spacing.xs,
   },
   statusBadge: {
-    ...neumorphism.badge,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: spacing.xs,
+    borderRadius: borderRadius.sm,
     flexDirection: 'row',
     alignItems: 'center',
   },
   statusText: {
-    ...neumorphism.badgeText,
+    fontSize: 11,
+    fontWeight: '600',
     marginLeft: spacing.xs,
   },
   appointmentBody: {
@@ -425,11 +436,12 @@ const styles = StyleSheet.create({
     marginLeft: spacing.xs,
   },
   notesContainer: {
-    backgroundColor: colors.background,
+    backgroundColor: '#F5F7FA',
     padding: spacing.md,
     borderRadius: borderRadius.md,
     marginTop: spacing.sm,
-    ...shadows.pressed,
+    borderWidth: 1,
+    borderColor: '#E0E0E0',
   },
   notesLabel: {
     ...typography.caption,
