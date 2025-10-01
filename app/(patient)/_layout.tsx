@@ -1,6 +1,7 @@
 import { Tabs } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { Platform, StatusBar } from 'react-native';
 
 export default function PatientLayout() {
   return (
@@ -27,6 +28,9 @@ export default function PatientLayout() {
           headerTintColor: '#FFFFFF',
           headerTitleStyle: {
             fontWeight: 'bold',
+          },
+          sceneStyle: {
+            paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight : 0,
           },
         }}
       >
