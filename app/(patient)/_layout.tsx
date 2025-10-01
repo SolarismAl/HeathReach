@@ -1,33 +1,35 @@
 import { Tabs } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 export default function PatientLayout() {
   return (
-    <Tabs
-      screenOptions={{
-        tabBarActiveTintColor: '#4A90E2',
-        tabBarInactiveTintColor: '#666',
-        tabBarStyle: {
-          backgroundColor: '#FFFFFF',
-          borderTopWidth: 1,
-          borderTopColor: '#E0E0E0',
-          paddingBottom: 8,
-          paddingTop: 8,
-          height: 70,
-        },
-        tabBarLabelStyle: {
-          fontSize: 12,
-          fontWeight: '500',
-        },
-        headerStyle: {
-          backgroundColor: '#4A90E2',
-        },
-        headerTintColor: '#FFFFFF',
-        headerTitleStyle: {
-          fontWeight: 'bold',
-        },
-      }}
-    >
+    <SafeAreaProvider>
+      <Tabs
+        screenOptions={{
+          tabBarActiveTintColor: '#4A90E2',
+          tabBarInactiveTintColor: '#666',
+          tabBarStyle: {
+            backgroundColor: '#FFFFFF',
+            borderTopWidth: 1,
+            borderTopColor: '#E0E0E0',
+            paddingBottom: 8,
+            paddingTop: 8,
+            height: 70,
+          },
+          tabBarLabelStyle: {
+            fontSize: 12,
+            fontWeight: '500',
+          },
+          headerStyle: {
+            backgroundColor: '#4A90E2',
+          },
+          headerTintColor: '#FFFFFF',
+          headerTitleStyle: {
+            fontWeight: 'bold',
+          },
+        }}
+      >
       <Tabs.Screen
         name="index"
         options={{
@@ -87,5 +89,6 @@ export default function PatientLayout() {
         }}
       />
     </Tabs>
+    </SafeAreaProvider>
   );
 }
