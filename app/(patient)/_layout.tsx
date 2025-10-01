@@ -1,54 +1,37 @@
 import { Tabs } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { SafeAreaProvider } from 'react-native-safe-area-context';
-import { Platform, StatusBar, useColorScheme, View, StyleSheet } from 'react-native';
-import { colors } from '../../styles/neumorphism';
+import { Platform, StatusBar } from 'react-native';
 
 export default function PatientLayout() {
-  const colorScheme = useColorScheme();
-  const isDark = colorScheme === 'dark';
-  
-  // Define colors based on theme
-  const themeColors = {
-    background: isDark ? '#1a1a1a' : colors.background,
-    surface: isDark ? '#2d2d2d' : '#FFFFFF',
-    text: isDark ? '#FFFFFF' : '#666',
-    border: isDark ? '#3d3d3d' : '#E0E0E0',
-    primary: colors.primary,
-  };
-
   return (
-    <SafeAreaProvider>
-      <View style={[styles.safeAreaBackground, { backgroundColor: themeColors.background }]}>
-        <Tabs
-          screenOptions={{
-            tabBarActiveTintColor: themeColors.primary,
-            tabBarInactiveTintColor: themeColors.text,
-            tabBarStyle: {
-              backgroundColor: themeColors.surface,
-              borderTopWidth: 1,
-              borderTopColor: themeColors.border,
-              paddingBottom: 8,
-              paddingTop: 8,
-              height: 70,
-            },
-            tabBarLabelStyle: {
-              fontSize: 12,
-              fontWeight: '500',
-            },
-            headerStyle: {
-              backgroundColor: themeColors.primary,
-            },
-            headerTintColor: '#FFFFFF',
-            headerTitleStyle: {
-              fontWeight: 'bold',
-            },
-            sceneStyle: {
-              backgroundColor: themeColors.background,
-              paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight : 0,
-            },
-          }}
-        >
+    <Tabs
+      screenOptions={{
+        tabBarActiveTintColor: '#4A90E2',
+        tabBarInactiveTintColor: '#666',
+        tabBarStyle: {
+          backgroundColor: '#FFFFFF',
+          borderTopWidth: 1,
+          borderTopColor: '#E0E0E0',
+          paddingBottom: 8,
+          paddingTop: 8,
+          height: 70,
+        },
+        tabBarLabelStyle: {
+          fontSize: 12,
+          fontWeight: '500',
+        },
+        headerStyle: {
+          backgroundColor: '#4A90E2',
+        },
+        headerTintColor: '#FFFFFF',
+        headerTitleStyle: {
+          fontWeight: 'bold',
+        },
+        sceneStyle: {
+          paddingTop: Platform.OS === 'android' ? (StatusBar.currentHeight || 0) + 10 : 50,
+        },
+      }}
+    >
       <Tabs.Screen
         name="index"
         options={{
@@ -108,13 +91,5 @@ export default function PatientLayout() {
         }}
       />
     </Tabs>
-      </View>
-    </SafeAreaProvider>
   );
 }
-
-const styles = StyleSheet.create({
-  safeAreaBackground: {
-    flex: 1,
-  },
-});
