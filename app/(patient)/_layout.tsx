@@ -1,17 +1,22 @@
 import { Tabs } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { Platform, StatusBar } from 'react-native';
+import { Platform, StatusBar, useColorScheme } from 'react-native';
+import { useThemeColors } from '../../styles/darkMode';
 
 export default function PatientLayout() {
+  const colorScheme = useColorScheme();
+  const colors = useThemeColors();
+  const isDark = colorScheme === 'dark';
+
   return (
     <Tabs
       screenOptions={{
-        tabBarActiveTintColor: '#4A90E2',
-        tabBarInactiveTintColor: '#666',
+        tabBarActiveTintColor: colors.primary,
+        tabBarInactiveTintColor: colors.textSecondary,
         tabBarStyle: {
-          backgroundColor: '#FFFFFF',
+          backgroundColor: colors.surface,
           borderTopWidth: 1,
-          borderTopColor: '#E0E0E0',
+          borderTopColor: colors.border,
           paddingBottom: 8,
           paddingTop: 8,
           height: 70,
@@ -21,13 +26,14 @@ export default function PatientLayout() {
           fontWeight: '500',
         },
         headerStyle: {
-          backgroundColor: '#4A90E2',
+          backgroundColor: colors.primary,
         },
         headerTintColor: '#FFFFFF',
         headerTitleStyle: {
           fontWeight: 'bold',
         },
         sceneStyle: {
+          backgroundColor: colors.background,
           paddingTop: Platform.OS === 'android' ? (StatusBar.currentHeight || 0) + 10 : 50,
         },
       }}

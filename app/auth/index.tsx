@@ -10,6 +10,7 @@ import {
   KeyboardAvoidingView,
   Platform,
   ScrollView,
+  useColorScheme,
 } from 'react-native';
 import { router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -18,6 +19,7 @@ import GoogleSignInModal from '../../components/GoogleSignInModal';
 import Toast from '../../components/Toast';
 import { useToast } from '../../hooks/useToast';
 import { neumorphism, colors, spacing, borderRadius, typography, shadows } from '../../styles/neumorphism';
+import { useThemeColors } from '../../styles/darkMode';
 
 export default function LoginScreen() {
   const [email, setEmail] = useState('');
@@ -28,6 +30,10 @@ export default function LoginScreen() {
   const [googleLoading, setGoogleLoading] = useState(false);
   const { signInWithEmail, signInWithGoogle, loading } = useAuth();
   const { toast, showError, showSuccess, hideToast } = useToast();
+  
+  const themeColors = useThemeColors();
+  const colorScheme = useColorScheme();
+  const isDark = colorScheme === 'dark';
 
   const handleLogin = async () => {
     if (!email.trim() || !password.trim()) {
@@ -72,7 +78,7 @@ export default function LoginScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={[styles.container, { backgroundColor: themeColors.background }]}>
       <KeyboardAvoidingView 
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={styles.keyboardView}

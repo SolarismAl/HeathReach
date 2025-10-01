@@ -1,12 +1,16 @@
 import { Stack } from 'expo-router';
-import { Platform, StatusBar } from 'react-native';
+import { Platform, StatusBar, useColorScheme } from 'react-native';
+import { useThemeColors } from '../../styles/darkMode';
 
 export default function AuthLayout() {
+  const colors = useThemeColors();
+
   return (
     <Stack
       screenOptions={{
         headerShown: false,
         contentStyle: {
+          backgroundColor: colors.background,
           paddingTop: Platform.OS === 'android' ? (StatusBar.currentHeight || 0) + 10 : 50,
         },
       }}

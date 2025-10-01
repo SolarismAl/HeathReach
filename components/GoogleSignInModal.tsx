@@ -19,9 +19,9 @@ export default function GoogleSignInModal({ visible, onClose, mode }: GoogleSign
   const [loading, setLoading] = useState(false);
   const { signInWithGoogle } = useAuth();
   
-  const redirectUri = makeRedirectUri({
-    scheme: 'healthreach',
-  });
+  // For Expo Go and development, this will use: https://auth.expo.io/@alfonso_solar/HealthReach
+  // For production builds, this will use: healthreach://
+  const redirectUri = makeRedirectUri();
   
   console.log('Google OAuth Redirect URI:', redirectUri);
   console.log('Google Client ID:', process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID);
