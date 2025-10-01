@@ -8,6 +8,7 @@ import {
   RefreshControl,
   Alert,
   ActivityIndicator,
+  SafeAreaView,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import apiService from '../../services/api';
@@ -225,7 +226,8 @@ export default function AppointmentHistoryScreen() {
 
   return (
     <ProtectedRoute allowedRoles={['patient']}>
-      <View style={styles.container}>
+      <SafeAreaView style={styles.safeArea}>
+        <View style={styles.container}>
       {/* Filter Buttons */}
       <View style={styles.filterContainer}>
         <FlatList
@@ -284,12 +286,17 @@ export default function AppointmentHistoryScreen() {
           }
         />
       )}
-    </View>
-  </ProtectedRoute>
-);
+      </View>
+      </SafeAreaView>
+    </ProtectedRoute>
+  );
 }
 
 const styles = StyleSheet.create({
+  safeArea: {
+    flex: 1,
+    backgroundColor: colors.background,
+  },
   container: {
     ...neumorphism.container,
   },

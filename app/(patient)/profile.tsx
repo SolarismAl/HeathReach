@@ -12,6 +12,7 @@ import {
   Image,
   KeyboardAvoidingView,
   Platform,
+  SafeAreaView,
 } from 'react-native';
 import { router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -317,10 +318,12 @@ export default function ProfileScreen() {
 
   if (loading) {
     return (
-      <View style={styles.loadingContainer}>
+      <SafeAreaView style={styles.safeArea}>
+        <View style={styles.loadingContainer}>
         <ActivityIndicator size="large" color="#4A90E2" />
         <Text style={styles.loadingText}>Loading profile...</Text>
-      </View>
+        </View>
+      </SafeAreaView>
     );
   }
 
@@ -329,7 +332,8 @@ export default function ProfileScreen() {
   console.log('User email for display:', user?.email);
   
   return (
-    <ScrollView style={styles.container}>
+    <SafeAreaView style={styles.safeArea}>
+      <ScrollView style={styles.container}>
       {/* Profile Header */}
       <View style={styles.profileHeader}>
         <View style={styles.avatarContainer}>
@@ -781,11 +785,16 @@ export default function ProfileScreen() {
           </View>
         </View>
       </Modal>
-    </ScrollView>
+      </ScrollView>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
+  safeArea: {
+    flex: 1,
+    backgroundColor: colors.background,
+  },
   container: {
     ...neumorphism.container,
   },

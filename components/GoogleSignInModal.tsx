@@ -6,6 +6,7 @@ import { router } from 'expo-router';
 import * as WebBrowser from 'expo-web-browser';
 import * as Google from 'expo-auth-session/providers/google';
 import { makeRedirectUri } from 'expo-auth-session';
+import { Platform } from 'react-native';
 
 WebBrowser.maybeCompleteAuthSession();
 
@@ -19,12 +20,16 @@ export default function GoogleSignInModal({ visible, onClose, mode }: GoogleSign
   const [loading, setLoading] = useState(false);
   const { signInWithGoogle } = useAuth();
   
-  // For Expo Go and development, this will use: https://auth.expo.io/@alfonso_solar/HealthReach
-  // For production builds, this will use: healthreach://
-  const redirectUri = makeRedirectUri();
+  // For mobile: Use Expo's auth proxy which is already registered in Google Console
+  // For web: Use localhost
+  const redirectUri = makeRedirectUri({
+    preferLocalhost: true,
+    native: 'https://auth.expo.io/@alfonso_solar/HealthReach',
+  });
   
   console.log('Google OAuth Redirect URI:', redirectUri);
   console.log('Google Client ID:', process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID);
+  console.log('Platform:', Platform.OS);
   
   const [request, response, promptAsync] = Google.useAuthRequest({
     clientId: process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID,
@@ -92,7 +97,13 @@ export default function GoogleSignInModal({ visible, onClose, mode }: GoogleSign
         
         // Use the Firebase ID token for backend authentication
         await signInWithGoogle(firebaseIdToken);
+        
+        // Close modal
         onClose();
+        
+        // Navigate to appropriate dashboard based on user role
+        // The AuthContext will handle setting the user data with role
+        // We'll let the app's navigation handle the redirect based on user state
         
       } catch (firebaseError) {
         console.error('Firebase Google sign-in error:', firebaseError);

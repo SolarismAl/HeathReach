@@ -10,6 +10,7 @@ import {
   Modal,
   FlatList,
   ActivityIndicator,
+  SafeAreaView,
 } from 'react-native';
 import { router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -256,7 +257,8 @@ export default function BookAppointmentScreen() {
   };
 
   return (
-    <ScrollView style={styles.container}>
+    <SafeAreaView style={styles.safeArea}>
+      <ScrollView style={styles.container}>
       {/* Error Message */}
       {error && (
         <View style={styles.errorBanner}>
@@ -612,10 +614,15 @@ export default function BookAppointmentScreen() {
         </View>
       </Modal>
     </ScrollView>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
+  safeArea: {
+    flex: 1,
+    backgroundColor: '#F8F9FA',
+  },
   container: {
     flex: 1,
     backgroundColor: '#F8F9FA',

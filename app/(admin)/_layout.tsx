@@ -26,6 +26,9 @@ export default function AdminLayout() {
         headerTitleStyle: {
           fontWeight: 'bold',
         },
+        sceneStyle: {
+          backgroundColor: '#F5F5F5',
+        },
       }}
     >
       <Tabs.Screen
