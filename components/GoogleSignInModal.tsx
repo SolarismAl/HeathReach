@@ -21,25 +21,34 @@ export default function GoogleSignInModal({ visible, onClose, mode }: GoogleSign
   const { signInWithGoogle } = useAuth();
   
   // Dynamic redirect URI that works in all environments
-  const redirectUri = makeRedirectUri({
-    scheme: 'com.anonymous.HealthReach',
-    path: 'oauthredirect',
-  });
+  // For web: use localhost, for mobile: use custom scheme
+  const redirectUri = Platform.OS === 'web' 
+    ? makeRedirectUri({ preferLocalhost: true })
+    : makeRedirectUri({
+        scheme: 'com.anonymous.HealthReach',
+        path: 'oauthredirect',
+      });
+  
+  // Use platform-specific client ID
+  const clientId = Platform.OS === 'android'
+    ? process.env.EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID
+    : process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID;
   
   console.log('=== GOOGLE OAUTH DEBUG ===');
-  console.log('Redirect URI:', redirectUri);
-  console.log('Client ID:', process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID ? 'Present' : '❌ MISSING');
   console.log('Platform:', Platform.OS);
+  console.log('Redirect URI:', redirectUri);
+  console.log('Using Client ID:', Platform.OS === 'android' ? 'Android' : 'Web');
+  console.log('Client ID Present:', clientId ? '✅ Yes' : '❌ MISSING');
+  console.log('Actual Client ID:', clientId); // Show the actual ID for verification
   
   // Validate client ID
-  if (!process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID) {
-    console.error('❌ EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID is missing!');
-    console.error('❌ Add it to eas.json env vars');
-    console.error('❌ Google Sign-In will fail without it');
+  if (!clientId) {
+    console.error('❌ Google Client ID is missing for platform:', Platform.OS);
+    console.error('❌ Add EXPO_PUBLIC_GOOGLE_' + (Platform.OS === 'android' ? 'ANDROID' : 'WEB') + '_CLIENT_ID to .env');
   }
   
   const [request, response, promptAsync] = Google.useAuthRequest({
-    clientId: process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID || 'MISSING_CLIENT_ID',
+    clientId: clientId || 'MISSING_CLIENT_ID',
     redirectUri: redirectUri,
     scopes: ['openid', 'profile', 'email'],
     responseType: 'id_token', // Request ID token directly
@@ -49,16 +58,27 @@ export default function GoogleSignInModal({ visible, onClose, mode }: GoogleSign
     console.log('Google Auth Response:', response);
     
     if (response?.type === 'success') {
-      const { authentication } = response;
+      const { authentication, params } = response;
       console.log('Google Authentication object:', authentication);
-      console.log('Access Token:', authentication?.accessToken);
-      console.log('ID Token:', authentication?.idToken);
+      console.log('Google Params:', params);
       
-      // Prefer ID token if available, fallback to access token
-      const tokenToUse = authentication?.idToken || authentication?.accessToken;
-      console.log('Using token:', tokenToUse ? 'ID Token' : 'Access Token');
+      // IMPORTANT: When using responseType: 'id_token', the token is in params, not authentication
+      const idToken = params?.id_token || authentication?.idToken;
+      const accessToken = authentication?.accessToken;
       
-      handleGoogleAuthSuccess(tokenToUse);
+      console.log('ID Token from params:', idToken ? 'Present' : 'Missing');
+      console.log('Access Token:', accessToken ? 'Present' : 'Missing');
+      
+      // Prefer ID token (from params), fallback to access token
+      const tokenToUse = idToken || accessToken;
+      console.log('Using token type:', idToken ? 'ID Token' : 'Access Token');
+      
+      if (tokenToUse) {
+        handleGoogleAuthSuccess(tokenToUse);
+      } else {
+        console.error('No token found in response');
+        Alert.alert('Error', 'Failed to get authentication token from Google');
+      }
     } else if (response?.type === 'error') {
       console.error('Google Auth Error:', response.error);
       Alert.alert(
@@ -68,61 +88,34 @@ export default function GoogleSignInModal({ visible, onClose, mode }: GoogleSign
     }
   }, [response]);
 
-  const handleGoogleAuthSuccess = async (accessToken?: string) => {
-    if (!accessToken) {
-      Alert.alert('Error', 'Failed to get Google access token');
+  const handleGoogleAuthSuccess = async (idToken?: string) => {
+    if (!idToken) {
+      Alert.alert('Error', 'Failed to get Google ID token');
       return;
     }
 
     setLoading(true);
     try {
-      console.log('GoogleSignInModal: Getting Google user info with access token');
+      console.log('GoogleSignInModal: Received Google ID token');
       
-      // Get user info from Google using the access token
-      const userInfoResponse = await fetch(`https://www.googleapis.com/oauth2/v2/userinfo?access_token=${accessToken}`);
-      const userInfo = await userInfoResponse.json();
+      // The ID token we received is a Google ID token (JWT)
+      // We can send it directly to the backend for authentication
+      // The backend will verify it with Google and create/login the user
       
-      console.log('Google user info:', userInfo);
+      console.log('GoogleSignInModal: Sending ID token to backend');
+      await signInWithGoogle(idToken);
       
-      // Use Firebase Auth to sign in with Google and get a proper Firebase ID token
-      console.log('GoogleSignInModal: Signing in with Firebase using Google credentials');
+      // Close modal
+      onClose();
       
-      try {
-        // Import Firebase auth functions
-        const { GoogleAuthProvider, signInWithCredential } = await import('firebase/auth');
-        const { getFirebaseAuth } = await import('../services/firebase');
-        
-        // Create Google credential with access token
-        const credential = GoogleAuthProvider.credential(null, accessToken);
-        
-        // Sign in with Firebase using Google credential
-        const auth = await getFirebaseAuth();
-        const userCredential = await signInWithCredential(auth, credential);
-        
-        // Get Firebase ID token
-        const firebaseIdToken = await userCredential.user.getIdToken();
-        console.log('GoogleSignInModal: Got Firebase ID token from Google credential');
-        
-        // Use the Firebase ID token for backend authentication
-        await signInWithGoogle(firebaseIdToken);
-        
-        // Close modal
-        onClose();
-        
-        // Navigate to appropriate dashboard based on user role
-        // The AuthContext will handle setting the user data with role
-        // We'll let the app's navigation handle the redirect based on user state
-        
-      } catch (firebaseError) {
-        console.error('Firebase Google sign-in error:', firebaseError);
-        // Fallback: try with access token directly
-        console.log('GoogleSignInModal: Fallback - using access token directly');
-        await signInWithGoogle(accessToken);
-        onClose();
-      }
+      console.log('GoogleSignInModal: Google Sign-In completed successfully');
       
+      // Navigate to index to trigger role-based redirect
+      console.log('GoogleSignInModal: Navigating to index for redirect...');
+      router.replace('/');
+        
     } catch (error: any) {
-      console.error('Google Auth Error:', error);
+      console.error('Google Sign-In error:', error);
       Alert.alert('Error', error.message || 'Google authentication failed');
     } finally {
       setLoading(false);

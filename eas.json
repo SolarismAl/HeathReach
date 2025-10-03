@@ -21,7 +21,8 @@
       "channel": "preview",
       "env": {
         "EXPO_PUBLIC_API_URL": "https://healthreach-api.onrender.com/api",
-        "EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID": "YOUR_GOOGLE_WEB_CLIENT_ID_HERE"
+        "EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID": "1035041170898-b68pk1d0hp4pikcr4ml5io281nvonn2a.apps.googleusercontent.com",
+        "EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID": "1035041170898-b68pk1d0hp4pikcr4ml5io281nvonn2a.apps.googleusercontent.com"
       }
     },
     "production": {
@@ -35,7 +36,8 @@
       "channel": "production",
       "env": {
         "EXPO_PUBLIC_API_URL": "https://healthreach-api.onrender.com/api",
-        "EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID": "YOUR_GOOGLE_WEB_CLIENT_ID_HERE"
+        "EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID": "1035041170898-b68pk1d0hp4pikcr4ml5io281nvonn2a.apps.googleusercontent.com",
+        "EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID": "1035041170898-b68pk1d0hp4pikcr4ml5io281nvonn2a.apps.googleusercontent.com"
       }
     }
   },

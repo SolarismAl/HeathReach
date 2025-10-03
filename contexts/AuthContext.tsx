@@ -3,6 +3,7 @@ import { User } from '../types';
 import CustomAuthService from '../services/auth-service';
 import apiService from '../services/api';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { router } from 'expo-router';
 
 interface AuthContextType {
   user: User | null;
@@ -258,12 +259,19 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       setUser(null);
       setFirebaseUser(null);
       console.log('AuthContext: User signed out successfully');
+      
+      // Navigate to auth page
+      console.log('AuthContext: Redirecting to login page...');
+      router.replace('/auth');
     } catch (error) {
       console.error('Sign out error:', error);
       // Even if API fails, still clear local state
       setUser(null);
       setFirebaseUser(null);
       console.log('AuthContext: Cleared local state despite error');
+      
+      // Still navigate to auth page
+      router.replace('/auth');
     } finally {
       setLoading(false);
     }
