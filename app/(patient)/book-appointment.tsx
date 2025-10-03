@@ -163,6 +163,8 @@ export default function BookAppointmentScreen() {
       return;
     }
 
+    console.log('Booking appointment for user:', user.user_id);
+
     setLoading(true);
     
     try {

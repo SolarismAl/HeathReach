@@ -26,13 +26,29 @@ export default function NotificationsScreen() {
 
   const loadNotifications = async () => {
     try {
+      console.log('=== LOADING NOTIFICATIONS ===');
+      console.log('Filter:', filter);
+      
       const params = filter === 'unread' ? { is_read: false } : {};
+      console.log('API params:', params);
+      
       const response = await apiService.getNotifications(params);
+      console.log('Notifications API response:', {
+        success: response.success,
+        message: response.message,
+        dataCount: response.data?.length || 0,
+        sampleData: response.data?.[0] || null
+      });
       
       if (response.success) {
         setNotifications(response.data || []);
+        console.log('✅ Notifications loaded successfully:', response.data?.length || 0);
+      } else {
+        console.error('❌ Failed to load notifications:', response.message);
+        Alert.alert('Error', response.message || 'Failed to load notifications');
       }
     } catch (error) {
+      console.error('❌ Exception loading notifications:', error);
       Alert.alert('Error', 'Failed to load notifications');
     } finally {
       setLoading(false);

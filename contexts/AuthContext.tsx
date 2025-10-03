@@ -169,6 +169,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       
       // Set user data from auth result
       const userData = authResult.user;
+      console.log('AuthContext: Setting user data from Google auth result:');
+      console.log('AuthContext: userData keys:', Object.keys(userData));
+      console.log('AuthContext: userData.user_id:', userData.user_id);
+      console.log('AuthContext: Full userData:', userData);
       setUser(userData);
       setFirebaseUser(authResult.user);
       
@@ -177,6 +181,28 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       await AsyncStorage.setItem('userData', JSON.stringify(userData));
       
       console.log('AuthContext: Google login successful, user set with role:', userData.role);
+      
+      // IMPORTANT: Refresh user data from backend to get the correct user_id
+      console.log('AuthContext: Refreshing user data from backend to sync user_id...');
+      try {
+        const profileResponse = await apiService.getProfile();
+        console.log('AuthContext: Profile response:', profileResponse);
+        if (profileResponse.success && profileResponse.data) {
+          console.log('AuthContext: Profile response.data:', profileResponse.data);
+          console.log('AuthContext: Profile response.data keys:', Object.keys(profileResponse.data));
+          
+          // Check if data is nested under 'user' key
+          const userData = (profileResponse.data as any).user || profileResponse.data;
+          console.log('AuthContext: Final user data to set:', userData);
+          console.log('AuthContext: Final user data role:', userData.role);
+          
+          setUser(userData);
+          await AsyncStorage.setItem('userData', JSON.stringify(userData));
+        }
+      } catch (error) {
+        console.error('AuthContext: Failed to refresh user data from backend:', error);
+        // Continue with the original user data if refresh fails
+      }
       
     } catch (error) {
       console.error('Google sign in error:', error);

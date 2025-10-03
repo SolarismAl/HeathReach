@@ -1,5 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import apiService from './api';
+import { getFirebaseAuth } from './firebase';
+import { signInWithCustomToken } from 'firebase/auth';
 
 console.log('=== CUSTOM AUTH SERVICE INITIALIZATION ===');
 
@@ -265,31 +267,69 @@ export class CustomAuthService {
       if (data.success && data.data?.token) {
         console.log('Google authentication successful');
         
-        // Store tokens and user data
-        await AsyncStorage.setItem('auth_token', data.data.token);
-        await AsyncStorage.setItem('firebase_id_token', data.data.firebase_token || data.data.token);
-        await AsyncStorage.setItem('user_data', JSON.stringify(data.data.user));
+        // IMPORTANT: Sign into Firebase with the custom token to maintain session
+        const firebaseToken = data.data.firebase_token || data.data.token;
+        console.log('Signing into Firebase with custom token...');
         
-        console.log('Google user data:', data.data.user);
-        console.log('Google user role:', data.data.user.role);
-        
-        return {
-          user: {
-            user_id: data.data.user.user_id,
-            name: data.data.user.name,
-            email: data.data.user.email,
-            role: data.data.user.role,
-            contact_number: data.data.user.contact_number,
-            address: data.data.user.address,
-            is_active: data.data.user.is_active,
-            created_at: data.data.user.created_at,
-            updated_at: data.data.user.updated_at,
-            // Firebase-style fields for compatibility
-            uid: data.data.user.user_id,
-            displayName: data.data.user.name,
-          },
-          idToken: data.data.firebase_token || data.data.token
-        };
+        try {
+          const auth = await getFirebaseAuth();
+          const userCredential = await signInWithCustomToken(auth, firebaseToken);
+          console.log('Firebase sign-in successful:', userCredential.user.uid);
+          
+          // Get fresh Firebase ID token
+          const freshIdToken = await userCredential.user.getIdToken();
+          console.log('Fresh Firebase ID token obtained');
+          
+          // Store tokens and user data
+          await AsyncStorage.setItem('auth_token', data.data.token);
+          await AsyncStorage.setItem('firebase_id_token', freshIdToken);
+          await AsyncStorage.setItem('user_data', JSON.stringify(data.data.user));
+          
+          console.log('Google user data:', data.data.user);
+          console.log('Google user role:', data.data.user.role);
+          
+          return {
+            user: {
+              user_id: data.data.user.user_id,
+              name: data.data.user.name,
+              email: data.data.user.email,
+              role: data.data.user.role,
+              contact_number: data.data.user.contact_number,
+              address: data.data.user.address,
+              is_active: data.data.user.is_active,
+              created_at: data.data.user.created_at,
+              updated_at: data.data.user.updated_at,
+              // Firebase-style fields for compatibility
+              uid: data.data.user.user_id,
+              displayName: data.data.user.name,
+            },
+            idToken: freshIdToken
+          };
+        } catch (firebaseError) {
+          console.error('Firebase sign-in failed:', firebaseError);
+          // Fallback to original token if Firebase sign-in fails
+          await AsyncStorage.setItem('auth_token', data.data.token);
+          await AsyncStorage.setItem('firebase_id_token', firebaseToken);
+          await AsyncStorage.setItem('user_data', JSON.stringify(data.data.user));
+          
+          return {
+            user: {
+              user_id: data.data.user.user_id,
+              name: data.data.user.name,
+              email: data.data.user.email,
+              role: data.data.user.role,
+              contact_number: data.data.user.contact_number,
+              address: data.data.user.address,
+              is_active: data.data.user.is_active,
+              created_at: data.data.user.created_at,
+              updated_at: data.data.user.updated_at,
+              // Firebase-style fields for compatibility
+              uid: data.data.user.user_id,
+              displayName: data.data.user.name,
+            },
+            idToken: firebaseToken
+          };
+        }
       } else {
         throw new Error(data.message || 'Google authentication failed');
       }
