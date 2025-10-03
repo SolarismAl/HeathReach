@@ -14,13 +14,21 @@ class ApiService {
   private baseURL: string;
 
   constructor() {
-    const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL || 'http://127.0.0.1:8000/api';
+    // CRITICAL: Production fallback to prevent localhost usage in builds
+    const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL || 'https://healthreach-api.onrender.com/api';
 
     console.log('=== API SERVICE INITIALIZATION ===');
     console.log('API Base URL:', API_BASE_URL);
     console.log('Environment variables loaded:', {
       EXPO_PUBLIC_API_URL: process.env.EXPO_PUBLIC_API_URL,
     });
+    
+    // Warn if using localhost (should never happen in production)
+    if (API_BASE_URL.includes('127.0.0.1') || API_BASE_URL.includes('localhost')) {
+      console.error('⚠️ WARNING: Using localhost URL - this will fail in production builds!');
+      console.error('⚠️ Make sure EXPO_PUBLIC_API_URL is set in eas.json');
+    }
+    
     this.baseURL = API_BASE_URL;
     console.log('Final API Base URL:', this.baseURL);
     
@@ -145,9 +153,18 @@ class ApiService {
     try {
       console.log('=== GET TOKEN DEBUG ===');
       
-      // Try to get fresh Firebase ID token from Custom Auth
-      const { default: CustomAuthService } = await import('./auth-service');
+      // PRIORITY 1: Check for stored Firebase ID token first (most reliable for mobile)
+      const firebaseToken = await AsyncStorage.getItem('firebase_id_token');
+      console.log('Stored Firebase ID token:', firebaseToken ? `Present (length: ${firebaseToken.length})` : 'NULL');
       
+      if (firebaseToken) {
+        console.log('✅ Using stored Firebase ID token for API call');
+        return firebaseToken;
+      }
+      
+      // PRIORITY 2: Try to get fresh Firebase ID token from Custom Auth
+      console.log('No stored token, attempting to get fresh token from current user...');
+      const { default: CustomAuthService } = await import('./auth-service');
       const currentUser = await CustomAuthService.getCurrentUser();
       
       console.log('Custom Auth current user:', currentUser ? 'Present' : 'NULL');
@@ -164,47 +181,26 @@ class ApiService {
           if (freshIdToken) {
             // Store the fresh token
             await this.setFirebaseIdToken(freshIdToken);
+            console.log('✅ Using fresh Firebase ID token');
             return freshIdToken;
           }
         } catch (tokenError) {
           console.error('Error getting fresh Firebase ID token:', tokenError);
         }
       } else {
-        console.log('No current user - checking stored tokens');
+        console.log('No current user found');
       }
       
-      // Fallback to stored Firebase ID token (prioritize this for API calls)
-      const firebaseToken = await AsyncStorage.getItem('firebase_id_token');
-      console.log('Stored Firebase ID token:', firebaseToken ? `Present (length: ${firebaseToken.length})` : 'NULL');
-      if (firebaseToken) {
-        console.log('Using stored Firebase ID token for API call');
-        return firebaseToken;
-      }
-      
-      // Last fallback to custom JWT token - but try to exchange it first
+      // PRIORITY 3: Last fallback to custom JWT token
       const customToken = await AsyncStorage.getItem('auth_token');
       console.log('Stored custom token:', customToken ? `Present (length: ${customToken.length})` : 'NULL');
+      
       if (customToken) {
-        console.log('Found custom token, attempting to exchange for ID token...');
-        try {
-          const { signInWithCustomToken } = await import('firebase/auth');
-          const { getFirebaseAuth } = await import('./firebase');
-          
-          const auth = await getFirebaseAuth();
-          const userCredential = await signInWithCustomToken(auth, customToken);
-          const idToken = await userCredential.user.getIdToken();
-          
-          console.log('Successfully exchanged custom token for fresh ID token');
-          await this.setFirebaseIdToken(idToken);
-          return idToken;
-        } catch (exchangeError) {
-          console.error('Failed to exchange custom token:', exchangeError);
-          console.log('Using custom JWT token for API call as fallback');
-          return customToken;
-        }
+        console.log('⚠️ Using custom JWT token as fallback (may not work with backend)');
+        return customToken;
       }
       
-      console.log('No valid token found - returning NULL');
+      console.log('❌ No valid token found - returning NULL');
       return null;
     } catch (error) {
       console.error('Error getting token:', error);

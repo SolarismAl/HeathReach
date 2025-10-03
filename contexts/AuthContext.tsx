@@ -133,9 +133,16 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       setUser(userData);
       
       // Store user data and token (already stored by CustomAuthService)
-      await AsyncStorage.setItem('userToken', authResult.user.idToken);
+      // Ensure we're using the Firebase ID token for API calls
+      const firebaseIdToken = await AsyncStorage.getItem('firebase_id_token');
+      console.log('AuthContext: Firebase ID token stored:', firebaseIdToken ? 'Yes' : 'No');
+      
+      if (authResult.user.idToken) {
+        await AsyncStorage.setItem('userToken', authResult.user.idToken);
+      }
       await AsyncStorage.setItem('userData', JSON.stringify(userData));
       console.log('AuthContext: Login successful, user set with role:', userData.role);
+      console.log('AuthContext: ✅ All tokens stored and ready for API calls');
       
     } catch (error: any) {
       console.error('AuthContext: Login error:', error);

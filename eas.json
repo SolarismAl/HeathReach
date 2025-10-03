@@ -18,7 +18,11 @@
       "ios": {
         "simulator": false
       },
-      "channel": "preview"
+      "channel": "preview",
+      "env": {
+        "EXPO_PUBLIC_API_URL": "https://healthreach-api.onrender.com/api",
+        "EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID": "YOUR_GOOGLE_WEB_CLIENT_ID_HERE"
+      }
     },
     "production": {
       "distribution": "store",
@@ -28,7 +32,11 @@
       "ios": {
         "simulator": false
       },
-      "channel": "production"
+      "channel": "production",
+      "env": {
+        "EXPO_PUBLIC_API_URL": "https://healthreach-api.onrender.com/api",
+        "EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID": "YOUR_GOOGLE_WEB_CLIENT_ID_HERE"
+      }
     }
   },
   "submit": {

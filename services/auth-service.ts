@@ -30,35 +30,50 @@ export class CustomAuthService {
 
       if (data.success && data.data?.token) {
         console.log('Authentication successful');
+        console.log('Backend token type:', data.data.firebase_token ? 'Firebase ID Token' : 'Custom Token');
         
-        // The token from backend is a Firebase custom token, we need to exchange it for an ID token
+        // The backend returns a Firebase custom token
+        // We MUST exchange it for a Firebase ID token for API calls to work
+        const customToken = data.data.firebase_token || data.data.token;
+        console.log('Custom token received from backend (length):', customToken.length);
+        
         try {
-          console.log('Exchanging custom token for ID token...');
+          console.log('Exchanging custom token for Firebase ID token...');
           const { signInWithCustomToken } = await import('firebase/auth');
           const { getFirebaseAuth } = await import('./firebase');
           
           // Sign in with the custom token to get an ID token
           const auth = await getFirebaseAuth();
-          const userCredential = await signInWithCustomToken(auth, data.data.token);
+          const userCredential = await signInWithCustomToken(auth, customToken);
           const idToken = await userCredential.user.getIdToken();
           
-          console.log('Successfully exchanged custom token for ID token');
+          console.log('✅ Successfully exchanged custom token for Firebase ID token');
+          console.log('Firebase ID token length:', idToken.length);
           
           // Store both tokens
-          await AsyncStorage.setItem('auth_token', data.data.token); // Custom token
+          await AsyncStorage.setItem('auth_token', customToken); // Custom token
           await AsyncStorage.setItem('firebase_id_token', idToken); // ID token for API calls
           await AsyncStorage.setItem('user_data', JSON.stringify(data.data.user));
+          console.log('✅ All tokens stored successfully');
           
-        } catch (tokenError) {
-          console.error('Failed to exchange custom token:', tokenError);
-          // Fallback: store the custom token as both
-          await AsyncStorage.setItem('auth_token', data.data.token);
-          await AsyncStorage.setItem('firebase_id_token', data.data.token);
+        } catch (tokenError: any) {
+          console.error('❌ Failed to exchange custom token:', tokenError);
+          console.error('Token error details:', tokenError?.message || 'Unknown error');
+          
+          // CRITICAL: If token exchange fails, we cannot make authenticated API calls
+          // Store the custom token as fallback but warn the user
+          await AsyncStorage.setItem('auth_token', customToken);
+          await AsyncStorage.setItem('firebase_id_token', customToken);
           await AsyncStorage.setItem('user_data', JSON.stringify(data.data.user));
+          console.log('⚠️ WARNING: Stored custom token as fallback - API calls may fail');
         }
         
         console.log('Backend user data:', data.data.user);
         console.log('User role from backend:', data.data.user.role);
+        
+        // Get the stored Firebase ID token to return
+        const storedIdToken = await AsyncStorage.getItem('firebase_id_token');
+        console.log('Returning user with stored ID token:', storedIdToken ? 'Present' : 'NULL');
         
         return {
           success: true,
@@ -75,7 +90,7 @@ export class CustomAuthService {
             // Also include Firebase-style fields for compatibility
             uid: data.data.user.user_id,
             displayName: data.data.user.name,
-            idToken: data.data.firebase_token || data.data.token
+            idToken: storedIdToken || data.data.firebase_token || data.data.token
           }
         };
       } else {

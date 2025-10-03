@@ -20,21 +20,29 @@ export default function GoogleSignInModal({ visible, onClose, mode }: GoogleSign
   const [loading, setLoading] = useState(false);
   const { signInWithGoogle } = useAuth();
   
-  // For mobile: Use Expo's auth proxy which is already registered in Google Console
-  // For web: Use localhost
+  // Dynamic redirect URI that works in all environments
   const redirectUri = makeRedirectUri({
-    preferLocalhost: true,
-    native: 'https://auth.expo.io/@alfonso_solar/HealthReach',
+    scheme: 'com.anonymous.HealthReach',
+    path: 'oauthredirect',
   });
   
-  console.log('Google OAuth Redirect URI:', redirectUri);
-  console.log('Google Client ID:', process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID);
+  console.log('=== GOOGLE OAUTH DEBUG ===');
+  console.log('Redirect URI:', redirectUri);
+  console.log('Client ID:', process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID ? 'Present' : '❌ MISSING');
   console.log('Platform:', Platform.OS);
   
+  // Validate client ID
+  if (!process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID) {
+    console.error('❌ EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID is missing!');
+    console.error('❌ Add it to eas.json env vars');
+    console.error('❌ Google Sign-In will fail without it');
+  }
+  
   const [request, response, promptAsync] = Google.useAuthRequest({
-    clientId: process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID,
+    clientId: process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID || 'MISSING_CLIENT_ID',
     redirectUri: redirectUri,
     scopes: ['openid', 'profile', 'email'],
+    responseType: 'id_token', // Request ID token directly
   });
 
   React.useEffect(() => {
