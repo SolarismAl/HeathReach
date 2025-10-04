@@ -83,14 +83,6 @@ export default function PatientLayout() {
           headerShown: false,
         }}
       />
-      <Tabs.Screen
-        name="about"
-        options={{
-          title: 'About HealthReach',
-          href: null, // This hides the tab from the tab bar
-          headerShown: false,
-        }}
-      />
     </Tabs>
   );
 }
