@@ -460,7 +460,7 @@ export default function ProfileScreen() {
 
         <TouchableOpacity 
           style={styles.actionItem}
-          onPress={() => router.push('/about')}
+          onPress={() => router.push('/components/AboutHealthReachScreen')}
         >
           <Ionicons name="information-circle-outline" size={20} color="#4A90E2" />
           <Text style={styles.actionText}>About HealthReach</Text>

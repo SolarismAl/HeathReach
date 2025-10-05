@@ -83,7 +83,6 @@ export default function RootLayout() {
             <Stack.Screen name="(patient)" options={{ headerShown: false }} />
             <Stack.Screen name="(health-worker)" options={{ headerShown: false }} />
             <Stack.Screen name="(admin)" options={{ headerShown: false }} />
-            <Stack.Screen name="about" options={{ headerShown: false }} />
           </Stack>
           <StatusBar style={colorScheme === 'dark' ? 'light' : 'dark'} />
         </ThemeProvider>

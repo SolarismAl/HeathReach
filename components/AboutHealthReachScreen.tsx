@@ -9,7 +9,7 @@ import {
 } from 'react-native';
 import { router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { neumorphism, colors, spacing, borderRadius, typography, shadows } from '../../styles/neumorphism';
+import { neumorphism, colors, spacing, borderRadius, typography, shadows } from '../styles/neumorphism';
 
 export default function AboutHealthReachScreen() {
   const handleContactPress = (type: 'email' | 'phone' | 'website') => {
