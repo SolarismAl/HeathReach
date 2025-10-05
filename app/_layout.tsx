@@ -1,20 +1,23 @@
-import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
-import { useFonts } from 'expo-font';
-import { Stack } from 'expo-router';
-import * as SplashScreen from 'expo-splash-screen';
-import { StatusBar } from 'expo-status-bar';
-import { useEffect } from 'react';
-import 'react-native-reanimated';
+import {
+  DarkTheme,
+  DefaultTheme,
+  ThemeProvider,
+} from "@react-navigation/native";
+import { useFonts } from "expo-font";
+import { Stack } from "expo-router";
+import { StatusBar } from "expo-status-bar";
+import { useEffect } from "react";
+import "react-native-reanimated";
 
-import { useColorScheme } from '@/hooks/use-color-scheme';
-import { AuthProvider } from '../contexts/AuthContext';
-import { ErrorBoundary } from '../components/ErrorBoundary';
-import notificationService from '../services/notifications';
-import connectivityService from '../services/connectivity';
-import { darkColors } from '../styles/darkMode';
-import { colors as lightColors } from '../styles/neumorphism';
+import { useColorScheme } from "@/hooks/use-color-scheme";
+import { AuthProvider } from "../contexts/AuthContext";
+import { ErrorBoundary } from "../components/ErrorBoundary";
+import notificationService from "../services/notifications";
+import connectivityService from "../services/connectivity";
+import { darkColors } from "../styles/darkMode";
+import { colors as lightColors } from "../styles/neumorphism";
 
-// Custom Dark Theme with HealthReach colors
+// ✅ Custom Dark Theme
 const HealthReachDarkTheme = {
   ...DarkTheme,
   colors: {
@@ -28,7 +31,7 @@ const HealthReachDarkTheme = {
   },
 };
 
-// Custom Light Theme with HealthReach colors
+// ✅ Custom Light Theme
 const HealthReachLightTheme = {
   ...DefaultTheme,
   colors: {
@@ -42,38 +45,25 @@ const HealthReachLightTheme = {
   },
 };
 
-// Prevent the splash screen from auto-hiding before asset loading is complete.
-SplashScreen.preventAutoHideAsync();
-
 export default function RootLayout() {
   const colorScheme = useColorScheme();
-  const [loaded] = useFonts({});
+
+  const [loaded] = useFonts({
+  });
 
   useEffect(() => {
-    if (loaded) {
-      SplashScreen.hideAsync();
-    }
-  }, [loaded]);
-
-  useEffect(() => {
-    // Initialize notification service
     notificationService.initialize();
-    
-    // Temporarily disable connectivity service to fix authentication issues
-    // connectivityService.initialize();
 
-    // Cleanup on unmount
     return () => {
       notificationService.cleanup();
-      // connectivityService.cleanup();
     };
   }, []);
 
   if (!loaded) {
-    return null;
+    console.log("Fonts not loaded, but rendering anyway...");
   }
 
-  console.log('RootLayout: Rendering with loaded fonts');
+  console.log("RootLayout: Rendering complete.");
 
   return (
     <ErrorBoundary>
@@ -81,6 +71,7 @@ export default function RootLayout() {
         <ThemeProvider value={colorScheme === 'dark' ? HealthReachDarkTheme : HealthReachLightTheme}>
           <Stack
             screenOptions={{
+              headerShown: false,
               contentStyle: {
                 backgroundColor: colorScheme === 'dark' ? darkColors.background : lightColors.background,
               },
