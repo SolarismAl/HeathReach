@@ -14,7 +14,7 @@ import { router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import apiService from '../../services/api';
 import { Appointment, Notification, User } from '../../types';
-import { ProtectedRoute } from '../../components/ProtectedRoute';
+import { ProtectedRoute } from '@/components/ProtectedRoute';
 import { neumorphism, colors, spacing, borderRadius, typography, shadows } from '../../styles/neumorphism';
 
 export default function PatientDashboard() {

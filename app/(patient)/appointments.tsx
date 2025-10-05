@@ -15,7 +15,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import apiService from '../../services/api';
 import { Appointment } from '../../types';
-import { ProtectedRoute } from '../../components/ProtectedRoute';
+import { ProtectedRoute } from '@/components/ProtectedRoute';
 import { neumorphism, colors, spacing, borderRadius, typography, shadows } from '../../styles/neumorphism';
 
 export default function AppointmentHistoryScreen() {

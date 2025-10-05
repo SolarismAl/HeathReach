@@ -12,7 +12,7 @@ import { Ionicons } from '@expo/vector-icons';
 import apiService from '../../services/api';
 import notificationService from '../../services/notifications';
 import { Appointment } from '../../types';
-import { ProtectedRoute } from '../../components/ProtectedRoute';
+import { ProtectedRoute } from '@/components/ProtectedRoute';
 
 export default function ManageAppointmentsScreen() {
   const [appointments, setAppointments] = useState<Appointment[]>([]);

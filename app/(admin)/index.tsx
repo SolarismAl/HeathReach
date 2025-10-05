@@ -12,7 +12,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import apiService from '../../services/api';
 import { AdminStats } from '../../types';
-import { ProtectedRoute } from '../../components/ProtectedRoute';
+import { ProtectedRoute } from '@/components/ProtectedRoute';
 
 const { width } = Dimensions.get('window');
 

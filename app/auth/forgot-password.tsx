@@ -15,8 +15,8 @@ import {
 import { router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import apiService from '../../services/api';
-import Toast from '../../components/Toast';
-import { useToast } from '../../hooks/useToast';
+import Toast from '@/components/Toast';
+import { useToast } from '@/hooks/useToast';
 import { neumorphism, colors, spacing, borderRadius, typography, shadows } from '../../styles/neumorphism';
 
 export default function ForgotPasswordScreen() {

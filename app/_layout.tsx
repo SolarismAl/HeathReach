@@ -11,7 +11,7 @@ import "react-native-reanimated";
 
 import { useColorScheme } from "@/hooks/use-color-scheme";
 import { AuthProvider } from "../contexts/AuthContext";
-import { ErrorBoundary } from "../components/ErrorBoundary";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
 import notificationService from "../services/notifications";
 import connectivityService from "../services/connectivity";
 import { darkColors } from "../styles/darkMode";

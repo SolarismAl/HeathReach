@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react';
-import { ToastType } from '../components/Toast';
+import { ToastType } from '@/components/Toast';
 
 interface ToastState {
   visible: boolean;
