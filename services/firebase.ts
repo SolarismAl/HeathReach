@@ -16,9 +16,48 @@ const initializeFirebase = async () => {
     // Force web environment detection to bypass React Native Firebase issues
     if (Platform.OS !== 'web') {
       console.log('Forcing web Firebase SDK for React Native compatibility');
-      // Temporarily override the environment detection
-      (global as any).window = (global as any).window || {};
-      (global as any).document = (global as any).document || {};
+      // Create proper mock objects with required properties for Firebase and routing
+      if (!(global as any).window) {
+        (global as any).window = {
+          location: {
+            href: 'https://healthreach.app',
+            protocol: 'https:',
+            host: 'healthreach.app',
+            hostname: 'healthreach.app',
+            port: '',
+            pathname: '/',
+            search: '',
+            hash: '',
+            origin: 'https://healthreach.app'
+          },
+          navigator: {
+            userAgent: 'HealthReach Mobile App'
+          },
+          localStorage: {
+            getItem: () => null,
+            setItem: () => {},
+            removeItem: () => {},
+            clear: () => {}
+          },
+          sessionStorage: {
+            getItem: () => null,
+            setItem: () => {},
+            removeItem: () => {},
+            clear: () => {}
+          }
+        };
+      }
+      if (!(global as any).document) {
+        (global as any).document = {
+          createElement: () => ({}),
+          getElementById: () => null,
+          getElementsByTagName: () => [],
+          addEventListener: () => {},
+          removeEventListener: () => {},
+          cookie: '',
+          readyState: 'complete'
+        };
+      }
     }
     
     // Import Firebase modules - force web SDK
