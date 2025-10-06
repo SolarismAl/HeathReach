@@ -43,6 +43,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     console.log('AuthContext: Initializing auth state');
     
     const initAuth = async () => {
+      // Set a timeout to prevent infinite loading
+      const timeout = setTimeout(() => {
+        console.warn('AuthContext: Initialization timeout - forcing loading to false');
+        setLoading(false);
+      }, 10000); // 10 second timeout
+      
       try {
         // First, try to restore Firebase user session
         console.log('AuthContext: Attempting to restore Firebase user session...');
@@ -50,18 +56,21 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           const { getFirebaseAuth } = await import('../services/firebase');
           const auth = await getFirebaseAuth();
           
-          // Wait for Firebase auth state to be restored
-          await new Promise((resolve) => {
-            const unsubscribe = auth.onAuthStateChanged((firebaseUser: any) => {
-              console.log('AuthContext: Firebase auth state changed:', firebaseUser ? 'User found' : 'No user');
-              if (firebaseUser) {
-                console.log('AuthContext: Firebase user restored:', firebaseUser.uid);
-                setFirebaseUser(firebaseUser);
-              }
-              unsubscribe();
-              resolve(firebaseUser);
-            });
-          });
+          // Wait for Firebase auth state to be restored with timeout
+          await Promise.race([
+            new Promise((resolve) => {
+              const unsubscribe = auth.onAuthStateChanged((firebaseUser: any) => {
+                console.log('AuthContext: Firebase auth state changed:', firebaseUser ? 'User found' : 'No user');
+                if (firebaseUser) {
+                  console.log('AuthContext: Firebase user restored:', firebaseUser.uid);
+                  setFirebaseUser(firebaseUser);
+                }
+                unsubscribe();
+                resolve(firebaseUser);
+              });
+            }),
+            new Promise((_, reject) => setTimeout(() => reject(new Error('Firebase auth timeout')), 5000))
+          ]);
         } catch (firebaseError) {
           console.error('AuthContext: Error restoring Firebase user:', firebaseError);
         }
@@ -77,13 +86,21 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         if (token && userData) {
           console.log('AuthContext: Found stored auth, verifying with backend');
           // Verify token is still valid by fetching profile
-          const profileResponse = await apiService.getProfile();
-          if (profileResponse.success && profileResponse.data) {
-            setUser(profileResponse.data);
-            console.log('AuthContext: Restored user session', profileResponse.data.role);
-          } else {
-            // Token invalid, clear stored data
-            console.log('AuthContext: Token invalid, clearing stored data');
+          try {
+            const profileResponse = await apiService.getProfile();
+            if (profileResponse.success && profileResponse.data) {
+              setUser(profileResponse.data);
+              console.log('AuthContext: Restored user session', profileResponse.data.role);
+            } else {
+              // Token invalid, clear stored data
+              console.log('AuthContext: Token invalid, clearing stored data');
+              await apiService.logout();
+              setUser(null);
+              setFirebaseUser(null);
+            }
+          } catch (profileError) {
+            console.error('AuthContext: Error fetching profile:', profileError);
+            // If profile fetch fails, clear stored data
             await apiService.logout();
             setUser(null);
             setFirebaseUser(null);
@@ -100,7 +117,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         setUser(null);
         setFirebaseUser(null);
       } finally {
+        clearTimeout(timeout);
         setLoading(false);
+        console.log('AuthContext: Initialization complete');
       }
     };
 

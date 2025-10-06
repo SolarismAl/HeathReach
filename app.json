@@ -49,7 +49,14 @@
       "router": {},
       "eas": {
         "projectId": "c061c661-8f9d-4c3e-aadd-04efb4e2662f"
-      }
+      },
+      "firebaseApiKey": "AIzaSyCLviE9L1ihRAafW14XH-li4M67CjyFbBc",
+      "firebaseAuthDomain": "healthreach-9167b.firebaseapp.com",
+      "firebaseProjectId": "healthreach-9167b",
+      "firebaseStorageBucket": "healthreach-9167b.firebasestorage.app",
+      "firebaseMessagingSenderId": "1035041170898",
+      "firebaseAppId": "1:1035041170898:web:5dd9a3435662835d15940b",
+      "apiUrl": "https://healthreach-api.onrender.com/api"
     },
     "runtimeVersion": {
       "policy": "appVersion"

@@ -77,12 +77,17 @@ const initializeFirebase = async () => {
 
     // Debug environment variables loading
     console.log('=== ENVIRONMENT VARIABLES DEBUG ===');
-    console.log('FIREBASE_API_KEY from env:', FIREBASE_API_KEY ? 'Present' : 'Missing');
-    console.log('FIREBASE_AUTH_DOMAIN from env:', FIREBASE_AUTH_DOMAIN ? 'Present' : 'Missing');
-    console.log('FIREBASE_PROJECT_ID from env:', FIREBASE_PROJECT_ID ? 'Present' : 'Missing');
-    console.log('FIREBASE_STORAGE_BUCKET from env:', FIREBASE_STORAGE_BUCKET ? 'Present' : 'Missing');
-    console.log('FIREBASE_MESSAGING_SENDER_ID from env:', FIREBASE_MESSAGING_SENDER_ID ? 'Present' : 'Missing');
-    console.log('FIREBASE_APP_ID from env:', FIREBASE_APP_ID ? 'Present' : 'Missing');
+    console.log('FIREBASE_API_KEY from env:', FIREBASE_API_KEY ? `Present (${FIREBASE_API_KEY.substring(0, 20)}...)` : 'Missing');
+    console.log('FIREBASE_AUTH_DOMAIN from env:', FIREBASE_AUTH_DOMAIN || 'Missing');
+    console.log('FIREBASE_PROJECT_ID from env:', FIREBASE_PROJECT_ID || 'Missing');
+    console.log('FIREBASE_STORAGE_BUCKET from env:', FIREBASE_STORAGE_BUCKET || 'Missing');
+    console.log('FIREBASE_MESSAGING_SENDER_ID from env:', FIREBASE_MESSAGING_SENDER_ID || 'Missing');
+    console.log('FIREBASE_APP_ID from env:', FIREBASE_APP_ID || 'Missing');
+    
+    // Validate required config
+    if (!FIREBASE_API_KEY || !FIREBASE_PROJECT_ID) {
+      throw new Error('Firebase configuration is missing required fields. Check app.json extra config.');
+    }
 
     // Firebase configuration
     const firebaseConfig = {
