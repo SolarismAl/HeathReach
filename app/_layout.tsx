@@ -6,7 +6,8 @@ import {
 import { useFonts } from "expo-font";
 import { Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
-import { useEffect } from "react";
+import { useEffect, useCallback } from "react";
+import * as SplashScreen from 'expo-splash-screen';
 import "react-native-reanimated";
 
 import { useColorScheme } from "@/hooks/use-color-scheme";
@@ -16,6 +17,12 @@ import notificationService from "../services/notifications";
 import connectivityService from "../services/connectivity";
 import { darkColors } from "../styles/darkMode";
 import { colors as lightColors } from "../styles/neumorphism";
+
+// Keep the splash screen visible while we fetch resources
+console.log('=== APP LAYOUT LOADING ===');
+SplashScreen.preventAutoHideAsync().catch((err) => {
+  console.warn('SplashScreen.preventAutoHideAsync failed:', err);
+});
 
 // ✅ Custom Dark Theme
 const HealthReachDarkTheme = {
@@ -46,10 +53,13 @@ const HealthReachLightTheme = {
 };
 
 export default function RootLayout() {
+  console.log('=== RootLayout RENDER ===');
   const colorScheme = useColorScheme();
 
   const [loaded] = useFonts({
   });
+  
+  console.log('RootLayout: Fonts loaded:', loaded);
 
   useEffect(() => {
     notificationService.initialize();
@@ -59,8 +69,38 @@ export default function RootLayout() {
     };
   }, []);
 
+  const onLayoutRootView = useCallback(async () => {
+    if (loaded) {
+      // Hide the splash screen after the fonts have loaded and the layout is ready
+      await SplashScreen.hideAsync();
+      console.log("RootLayout: Splash screen hidden");
+    }
+  }, [loaded]);
+
+  useEffect(() => {
+    if (loaded) {
+      // Also hide splash screen when fonts are loaded
+      onLayoutRootView();
+    }
+  }, [loaded, onLayoutRootView]);
+
+  // Fallback: Force hide splash screen after 3 seconds regardless
+  useEffect(() => {
+    const timeout = setTimeout(async () => {
+      console.log("RootLayout: Force hiding splash screen after timeout");
+      try {
+        await SplashScreen.hideAsync();
+      } catch (e) {
+        console.warn("Failed to hide splash screen:", e);
+      }
+    }, 3000);
+
+    return () => clearTimeout(timeout);
+  }, []);
+
   if (!loaded) {
-    console.log("Fonts not loaded, but rendering anyway...");
+    console.log("Fonts not loaded, keeping splash screen visible...");
+    return null; // Return null to keep splash screen visible
   }
 
   console.log("RootLayout: Rendering complete.");
