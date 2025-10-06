@@ -56,8 +56,15 @@ export default function RootLayout() {
   console.log('=== RootLayout RENDER ===');
   const colorScheme = useColorScheme();
 
-  const [loaded] = useFonts({
+  const [loaded, error] = useFonts({
   });
+  
+  // Log font loading errors
+  useEffect(() => {
+    if (error) {
+      console.error('Font loading error:', error);
+    }
+  }, [error]);
   
   console.log('RootLayout: Fonts loaded:', loaded);
 
@@ -112,19 +119,69 @@ export default function RootLayout() {
           <Stack
             screenOptions={{
               headerShown: false,
+              animation: 'fade',
               contentStyle: {
                 backgroundColor: colorScheme === 'dark' ? darkColors.background : lightColors.background,
               },
             }}
           >
-            <Stack.Screen name="index" options={{ headerShown: false }} />
-            <Stack.Screen name="auth" options={{ headerShown: false }} />
-            <Stack.Screen name="not-available" options={{ headerShown: false }} />
-            <Stack.Screen name="about" options={{ headerShown: false }} />
-            <Stack.Screen name="modal" options={{ headerShown: false, presentation: 'modal' }} />
-            <Stack.Screen name="(patient)" options={{ headerShown: false }} />
-            <Stack.Screen name="(health-worker)" options={{ headerShown: false }} />
-            <Stack.Screen name="(admin)" options={{ headerShown: false }} />
+            <Stack.Screen 
+              name="index" 
+              options={{ 
+                headerShown: false,
+                animation: 'fade',
+              }} 
+            />
+            <Stack.Screen 
+              name="auth" 
+              options={{ 
+                headerShown: false,
+                animation: 'slide_from_right',
+              }} 
+            />
+            <Stack.Screen 
+              name="not-available" 
+              options={{ 
+                headerShown: false,
+                animation: 'fade',
+              }} 
+            />
+            <Stack.Screen 
+              name="about" 
+              options={{ 
+                headerShown: false,
+                animation: 'slide_from_right',
+              }} 
+            />
+            <Stack.Screen 
+              name="modal" 
+              options={{ 
+                headerShown: false, 
+                presentation: 'modal',
+                animation: 'slide_from_bottom',
+              }} 
+            />
+            <Stack.Screen 
+              name="(patient)" 
+              options={{ 
+                headerShown: false,
+                animation: 'fade',
+              }} 
+            />
+            <Stack.Screen 
+              name="(health-worker)" 
+              options={{ 
+                headerShown: false,
+                animation: 'fade',
+              }} 
+            />
+            <Stack.Screen 
+              name="(admin)" 
+              options={{ 
+                headerShown: false,
+                animation: 'fade',
+              }} 
+            />
           </Stack>
           <StatusBar style={colorScheme === 'dark' ? 'light' : 'dark'} />
         </ThemeProvider>
