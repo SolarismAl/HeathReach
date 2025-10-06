@@ -41,16 +41,19 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   useEffect(() => {
     console.log('AuthContext: Initializing auth state');
+    let mounted = true;
     
     const initAuth = async () => {
       // Set a timeout to prevent infinite loading
       const timeout = setTimeout(() => {
         console.warn('AuthContext: Initialization timeout - forcing loading to false');
-        setLoading(false);
-      }, 10000); // 10 second timeout
+        if (mounted) {
+          setLoading(false);
+        }
+      }, 8000); // 8 second timeout - shorter for production
       
       try {
-        // First, try to restore Firebase user session
+        // First, try to restore Firebase user session (with timeout protection)
         console.log('AuthContext: Attempting to restore Firebase user session...');
         try {
           const { getFirebaseAuth } = await import('../services/firebase');
@@ -63,16 +66,19 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
                 console.log('AuthContext: Firebase auth state changed:', firebaseUser ? 'User found' : 'No user');
                 if (firebaseUser) {
                   console.log('AuthContext: Firebase user restored:', firebaseUser.uid);
-                  setFirebaseUser(firebaseUser);
+                  if (mounted) {
+                    setFirebaseUser(firebaseUser);
+                  }
                 }
                 unsubscribe();
                 resolve(firebaseUser);
               });
             }),
-            new Promise((_, reject) => setTimeout(() => reject(new Error('Firebase auth timeout')), 5000))
+            new Promise((_, reject) => setTimeout(() => reject(new Error('Firebase auth timeout')), 3000))
           ]);
         } catch (firebaseError) {
-          console.error('AuthContext: Error restoring Firebase user:', firebaseError);
+          console.error('AuthContext: Error restoring Firebase user (skipping):', firebaseError);
+          // Continue without Firebase - not critical for initial load
         }
         
         // Check for stored token and user data
@@ -118,12 +124,23 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         setFirebaseUser(null);
       } finally {
         clearTimeout(timeout);
-        setLoading(false);
+        if (mounted) {
+          setLoading(false);
+        }
         console.log('AuthContext: Initialization complete');
       }
     };
 
-    initAuth();
+    initAuth().catch((err) => {
+      console.error('AuthContext: Fatal initialization error:', err);
+      if (mounted) {
+        setLoading(false);
+      }
+    });
+
+    return () => {
+      mounted = false;
+    };
   }, []);
 
   const signInWithEmail = async (email: string, password: string) => {

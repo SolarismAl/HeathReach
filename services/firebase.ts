@@ -9,9 +9,12 @@ let auth: any;
 let firestore: any;
 
 const initializeFirebase = async () => {
+  const startTime = Date.now();
   try {
+    console.log('=== FIREBASE INIT START ===');
     console.log('Loading Firebase modules...');
     console.log('Platform detected:', Platform.OS);
+    console.log('Timestamp:', new Date().toISOString());
     
     // Force web environment detection to bypass React Native Firebase issues
     if (Platform.OS !== 'web') {
@@ -150,11 +153,16 @@ const initializeFirebase = async () => {
       throw firestoreError;
     }
 
+    const endTime = Date.now();
     console.log('All Firebase services initialized successfully');
+    console.log(`=== FIREBASE INIT COMPLETE (${endTime - startTime}ms) ===`);
     
     return { auth, firestore, firebaseApp };
   } catch (error) {
+    const endTime = Date.now();
+    console.error(`=== FIREBASE INIT FAILED (${endTime - startTime}ms) ===`);
     console.error('Firebase initialization error:', error);
+    console.error('Error stack:', (error as Error)?.stack);
     throw error;
   }
 };

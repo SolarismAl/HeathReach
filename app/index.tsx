@@ -65,8 +65,15 @@ export default function LandingPage() {
     return (
       <SafeAreaView style={styles.container}>
         <View style={[styles.gradient, styles.loadingContainer]}>
-          <ActivityIndicator size="large" color="#FFFFFF" />
-          <Text style={styles.loadingText}>HealthReach</Text>
+          <View style={styles.logoIcon}>
+            <Ionicons name="medical" size={60} color="#FFFFFF" />
+          </View>
+          <Text style={styles.appName}>HealthReach</Text>
+          <ActivityIndicator size="large" color="#FFFFFF" style={{ marginTop: 20 }} />
+          <Text style={styles.loadingText}>Initializing...</Text>
+          <Text style={styles.loadingSubtext}>
+            If this takes more than 10 seconds, please restart the app
+          </Text>
         </View>
       </SafeAreaView>
     );
@@ -218,5 +225,12 @@ const styles = StyleSheet.create({
     color: colors.surface,
     marginTop: spacing.md,
     fontWeight: '300',
+  },
+  loadingSubtext: {
+    ...typography.body2,
+    color: 'rgba(255, 255, 255, 0.7)',
+    marginTop: spacing.sm,
+    textAlign: 'center',
+    paddingHorizontal: spacing.lg,
   },
 });
