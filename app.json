@@ -63,7 +63,8 @@
       "policy": "appVersion"
     },
     "updates": {
-      "projectId": "c061c661-8f9d-4c3e-aadd-04efb4e2662f"
+      "projectId": "c061c661-8f9d-4c3e-aadd-04efb4e2662f",
+      "url": "https://u.expo.dev/c061c661-8f9d-4c3e-aadd-04efb4e2662f"
     },
     "owner": "alfonso_solar1"
   }
