@@ -60,12 +60,6 @@
       "firebaseAppId": "1:1035041170898:web:5dd9a3435662835d15940b",
       "apiUrl": "https://healthreach-api.onrender.com/api"
     },
-    "runtimeVersion": {
-      "policy": "appVersion"
-    },
-    "updates": {
-      "url": "https://u.expo.dev/c061c661-8f9d-4c3e-aadd-04efb4e2662f"
-    },
     "owner": "alfonso_solar1"
   }
 }
