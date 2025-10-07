@@ -147,13 +147,6 @@ export default function RootLayout() {
               }} 
             />
             <Stack.Screen 
-              name="about" 
-              options={{ 
-                headerShown: false,
-                animation: 'slide_from_right',
-              }} 
-            />
-            <Stack.Screen 
               name="modal" 
               options={{ 
                 headerShown: false, 
@@ -163,20 +156,6 @@ export default function RootLayout() {
             />
             <Stack.Screen 
               name="(patient)" 
-              options={{ 
-                headerShown: false,
-                animation: 'fade',
-              }} 
-            />
-            <Stack.Screen 
-              name="(health-worker)" 
-              options={{ 
-                headerShown: false,
-                animation: 'fade',
-              }} 
-            />
-            <Stack.Screen 
-              name="(admin)" 
               options={{ 
                 headerShown: false,
                 animation: 'fade',

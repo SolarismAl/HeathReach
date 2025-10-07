@@ -429,18 +429,6 @@ export default function ProfileScreen() {
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Quick Actions</Text>
         
-        {/* <TouchableOpacity style={styles.actionItem}>
-          <Ionicons name="notifications-outline" size={20} color="#4A90E2" />
-          <Text style={styles.actionText}>Notification Settings</Text>
-          <Ionicons name="chevron-forward" size={20} color="#CCC" />
-        </TouchableOpacity> */}
-
-        {/* <TouchableOpacity style={styles.actionItem}>
-          <Ionicons name="shield-outline" size={20} color="#4A90E2" />
-          <Text style={styles.actionText}>Privacy Settings</Text>
-          <Ionicons name="chevron-forward" size={20} color="#CCC" />
-        </TouchableOpacity> */}
-
         <TouchableOpacity 
           style={styles.actionItem}
           onPress={() => setPasswordModalVisible(true)}
@@ -452,60 +440,7 @@ export default function ProfileScreen() {
           <Ionicons name="chevron-forward" size={20} color="#CCC" />
         </TouchableOpacity>
 
-        {/* <TouchableOpacity style={styles.actionItem}>
-          <Ionicons name="help-circle-outline" size={20} color="#4A90E2" />
-          <Text style={styles.actionText}>Help & Support</Text>
-          <Ionicons name="chevron-forward" size={20} color="#CCC" />
-        </TouchableOpacity> */}
-
-        <TouchableOpacity 
-          style={styles.actionItem}
-          onPress={() => router.push('/components/AboutHealthReachScreen')}
-        >
-          <Ionicons name="information-circle-outline" size={20} color="#4A90E2" />
-          <Text style={styles.actionText}>About HealthReach</Text>
-          <Ionicons name="chevron-forward" size={20} color="#CCC" />
-        </TouchableOpacity>
-
-        {/* <TouchableOpacity 
-          style={styles.actionItem}
-          activeOpacity={0.7}
-          onPress={() => {
-            console.log('=== DEBUG PROFILE EDIT ===');
-            console.log('User state:', user);
-            console.log('EditForm state:', editForm);
-            
-            // Test form update
-            const testData = {
-              name: 'Test Name Update',
-              email: user?.email || 'test@example.com',
-              contact_number: '123-456-7890' // Use correct backend field name
-            };
-            
-            Alert.alert(
-              'Debug Profile Edit',
-              `Current User: ${user?.name || 'null'}\nCurrent Form: ${editForm.name || 'empty'}\n\nTesting with: ${testData.name}`,
-              [
-                { text: 'Cancel', style: 'cancel' },
-                { 
-                  text: 'Test Update', 
-                  onPress: async () => {
-                    try {
-                      const response = await apiService.updateProfile(testData);
-                      Alert.alert('Test Result', `Success: ${response.success}\nMessage: ${response.message}`);
-                    } catch (error: any) {
-                      Alert.alert('Test Error', error.message);
-                    }
-                  }
-                }
-              ]
-            );
-          }}
-        >
-          <Ionicons name="bug-outline" size={20} color="#4A90E2" />
-          <Text style={styles.actionText}>Debug Profile Edit</Text>
-          <Ionicons name="chevron-forward" size={20} color="#CCC" />
-        </TouchableOpacity> */}
+      
       </View>
 
       {/* Logout Section */}
