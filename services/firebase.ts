@@ -1,12 +1,11 @@
 import { Platform } from 'react-native';
 
-console.log('=== FIREBASE INITIALIZATION ===');
-console.log('Platform.OS:', Platform.OS);
-
 // Dynamic imports to force web Firebase SDK usage
 let firebaseApp: any;
 let auth: any;
 let firestore: any;
+let firebasePromise: Promise<any> | null = null;
+let isInitializing = false;
 
 const initializeFirebase = async () => {
   const startTime = Date.now();
@@ -167,14 +166,33 @@ const initializeFirebase = async () => {
   }
 };
 
-// Initialize Firebase immediately
-const firebasePromise = initializeFirebase();
+// Lazy initialization - only initialize when first requested
+const ensureFirebaseInitialized = async () => {
+  if (firebasePromise) {
+    return firebasePromise;
+  }
+  
+  if (isInitializing) {
+    // Wait for ongoing initialization
+    while (isInitializing) {
+      await new Promise(resolve => setTimeout(resolve, 100));
+    }
+    return firebasePromise;
+  }
+  
+  isInitializing = true;
+  firebasePromise = initializeFirebase().finally(() => {
+    isInitializing = false;
+  });
+  
+  return firebasePromise;
+};
 
 // Export promise-based getters with retry mechanism
 export const getFirebaseAuth = async (retryCount = 0): Promise<any> => {
   try {
     console.log('getFirebaseAuth called, retry count:', retryCount);
-    await firebasePromise;
+    await ensureFirebaseInitialized();
     
     if (!auth) {
       throw new Error('Firebase Auth not initialized');
@@ -197,12 +215,12 @@ export const getFirebaseAuth = async (retryCount = 0): Promise<any> => {
 };
 
 export const getFirebaseFirestore = async () => {
-  await firebasePromise;
+  await ensureFirebaseInitialized();
   return firestore;
 };
 
 export const getFirebaseApp = async () => {
-  await firebasePromise;
+  await ensureFirebaseInitialized();
   return firebaseApp;
 };
 

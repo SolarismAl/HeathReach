@@ -50,36 +50,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         if (mounted) {
           setLoading(false);
         }
-      }, 8000); // 8 second timeout - shorter for production
+      }, 5000); // 5 second timeout for production
       
       try {
-        // First, try to restore Firebase user session (with timeout protection)
-        console.log('AuthContext: Attempting to restore Firebase user session...');
-        try {
-          const { getFirebaseAuth } = await import('../services/firebase');
-          const auth = await getFirebaseAuth();
-          
-          // Wait for Firebase auth state to be restored with timeout
-          await Promise.race([
-            new Promise((resolve) => {
-              const unsubscribe = auth.onAuthStateChanged((firebaseUser: any) => {
-                console.log('AuthContext: Firebase auth state changed:', firebaseUser ? 'User found' : 'No user');
-                if (firebaseUser) {
-                  console.log('AuthContext: Firebase user restored:', firebaseUser.uid);
-                  if (mounted) {
-                    setFirebaseUser(firebaseUser);
-                  }
-                }
-                unsubscribe();
-                resolve(firebaseUser);
-              });
-            }),
-            new Promise((_, reject) => setTimeout(() => reject(new Error('Firebase auth timeout')), 3000))
-          ]);
-        } catch (firebaseError) {
-          console.error('AuthContext: Error restoring Firebase user (skipping):', firebaseError);
-          // Continue without Firebase - not critical for initial load
-        }
+        // Skip Firebase restoration on initial load - it's not critical
+        // Firebase will be initialized lazily when user tries to sign in
+        console.log('AuthContext: Skipping Firebase restoration on initial load for faster startup');
         
         // Check for stored token and user data
         const token = await apiService.getStoredToken();
