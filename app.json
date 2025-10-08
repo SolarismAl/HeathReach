@@ -50,7 +50,7 @@
     "extra": {
       "router": {},
       "eas": {
-        "projectId": "c061c661-8f9d-4c3e-aadd-04efb4e2662f"
+        "projectId": "33dd3425-7c00-4d04-970b-65daeaaf0ec0"
       },
       "firebaseApiKey": "AIzaSyCLviE9L1ihRAafW14XH-li4M67CjyFbBc",
       "firebaseAuthDomain": "healthreach-9167b.firebaseapp.com",
@@ -60,6 +60,6 @@
       "firebaseAppId": "1:1035041170898:web:5dd9a3435662835d15940b",
       "apiUrl": "https://healthreach-api.onrender.com/api"
     },
-    "owner": "alfonso_solar1"
+    "owner": "alfonso_solar2"
   }
 }
