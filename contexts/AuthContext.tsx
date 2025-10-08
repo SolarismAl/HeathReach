@@ -150,12 +150,25 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       const firebaseIdToken = await AsyncStorage.getItem('firebase_id_token');
       console.log('AuthContext: Firebase ID token stored:', firebaseIdToken ? 'Yes' : 'No');
       
+      // CRITICAL: Store token in multiple keys for redundancy in production builds
       if (authResult.user.idToken) {
         await AsyncStorage.setItem('userToken', authResult.user.idToken);
+        await AsyncStorage.setItem('firebase_id_token', authResult.user.idToken);
+        console.log('AuthContext: Stored idToken in both userToken and firebase_id_token');
+      } else if (firebaseIdToken) {
+        // Ensure userToken is also set if we have firebase_id_token
+        await AsyncStorage.setItem('userToken', firebaseIdToken);
+        console.log('AuthContext: Synced firebase_id_token to userToken');
       }
       await AsyncStorage.setItem('userData', JSON.stringify(userData));
       console.log('AuthContext: Login successful, user set with role:', userData.role);
       console.log('AuthContext: ✅ All tokens stored and ready for API calls');
+      
+      // Verify tokens are actually stored
+      const verifyUserToken = await AsyncStorage.getItem('userToken');
+      const verifyFirebaseToken = await AsyncStorage.getItem('firebase_id_token');
+      console.log('AuthContext: Token verification - userToken:', verifyUserToken ? 'Present' : 'MISSING');
+      console.log('AuthContext: Token verification - firebase_id_token:', verifyFirebaseToken ? 'Present' : 'MISSING');
       
     } catch (error: any) {
       console.error('AuthContext: Login error:', error);
@@ -188,11 +201,13 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       setUser(userData);
       setFirebaseUser(authResult.user);
       
-      // Store user data and token
+      // CRITICAL: Store token in multiple keys for redundancy in production builds
       await AsyncStorage.setItem('userToken', authResult.idToken);
+      await AsyncStorage.setItem('firebase_id_token', authResult.idToken);
       await AsyncStorage.setItem('userData', JSON.stringify(userData));
       
       console.log('AuthContext: Google login successful, user set with role:', userData.role);
+      console.log('AuthContext: Stored tokens in both userToken and firebase_id_token');
       
       // IMPORTANT: Refresh user data from backend to get the correct user_id
       console.log('AuthContext: Refreshing user data from backend to sync user_id...');
@@ -260,10 +275,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         // Registration successful, user is automatically logged in
         setUser(response.data.user);
         
-        // Store token and user data
+        // CRITICAL: Store token in multiple keys for redundancy in production builds
         if (response.data.token) {
           await AsyncStorage.setItem('userToken', response.data.token);
+          await AsyncStorage.setItem('firebase_id_token', response.data.token);
           await AsyncStorage.setItem('userData', JSON.stringify(response.data.user));
+          console.log('AuthContext: Stored registration tokens in both userToken and firebase_id_token');
         }
         
         console.log('AuthContext: Registration successful, user logged in', response.data.user);

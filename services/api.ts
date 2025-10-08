@@ -14,8 +14,28 @@ class ApiService {
   private baseURL: string;
 
   constructor() {
-    // CRITICAL: Production fallback to prevent localhost usage in builds
-    const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL || 'https://healthreach-api.onrender.com/api';
+    // CRITICAL: Production fallback with multiple sources
+    // 1. Try environment variable
+    // 2. Try app.json extra config
+    // 3. Fallback to hardcoded production URL
+    let API_BASE_URL = process.env.EXPO_PUBLIC_API_URL;
+    
+    // If env var is not available, try app.json extra config
+    if (!API_BASE_URL) {
+      try {
+        const Constants = require('expo-constants').default;
+        API_BASE_URL = Constants.expoConfig?.extra?.apiUrl;
+        console.log('Using API URL from app.json extra config:', API_BASE_URL);
+      } catch (e) {
+        console.log('Could not load from expo-constants');
+      }
+    }
+    
+    // Final fallback to production URL
+    if (!API_BASE_URL) {
+      API_BASE_URL = 'https://healthreach-api.onrender.com/api';
+      console.log('Using hardcoded fallback API URL');
+    }
 
     console.log('=== API SERVICE INITIALIZATION ===');
     console.log('API Base URL:', API_BASE_URL);
@@ -173,40 +193,37 @@ class ApiService {
         return userToken;
       }
       
-      // PRIORITY 3: Try to get fresh Firebase ID token from Custom Auth (only in development)
-      // This may fail in production builds due to dynamic imports
-      if (__DEV__) {
-        console.log('Development mode: attempting to get fresh token from current user...');
-        try {
-          const { default: CustomAuthService } = await import('./auth-service');
-          const currentUser = await CustomAuthService.getCurrentUser();
-          
-          console.log('Custom Auth current user:', currentUser ? 'Present' : 'NULL');
-          
-          if (currentUser) {
-            console.log('Current user UID:', currentUser.uid);
-            console.log('Current user email:', currentUser.email);
-            console.log('Getting fresh Firebase ID token from current user');
-            try {
-              // Get token from custom auth service
-              const freshIdToken = await currentUser.getIdToken();
-              console.log('Got fresh Firebase ID token (length):', freshIdToken?.length || 0);
-              
-              if (freshIdToken) {
-                // Store the fresh token
-                await this.setFirebaseIdToken(freshIdToken);
-                console.log('✅ Using fresh Firebase ID token');
-                return freshIdToken;
-              }
-            } catch (tokenError) {
-              console.error('Error getting fresh Firebase ID token:', tokenError);
+      // PRIORITY 3: Try to get fresh Firebase ID token from Custom Auth (works in both dev and production)
+      console.log('Attempting to get fresh token from current user...');
+      try {
+        const { default: CustomAuthService } = await import('./auth-service');
+        const currentUser = await CustomAuthService.getCurrentUser();
+        
+        console.log('Custom Auth current user:', currentUser ? 'Present' : 'NULL');
+        
+        if (currentUser) {
+          console.log('Current user UID:', currentUser.uid);
+          console.log('Current user email:', currentUser.email);
+          console.log('Getting fresh Firebase ID token from current user');
+          try {
+            // Get token from custom auth service
+            const freshIdToken = await currentUser.getIdToken();
+            console.log('Got fresh Firebase ID token (length):', freshIdToken?.length || 0);
+            
+            if (freshIdToken) {
+              // Store the fresh token
+              await this.setFirebaseIdToken(freshIdToken);
+              console.log('✅ Using fresh Firebase ID token');
+              return freshIdToken;
             }
-          } else {
-            console.log('No current user found');
+          } catch (tokenError) {
+            console.error('Error getting fresh Firebase ID token:', tokenError);
           }
-        } catch (importError) {
-          console.error('Error importing auth-service:', importError);
+        } else {
+          console.log('No current user found');
         }
+      } catch (importError) {
+        console.error('Error importing auth-service:', importError);
       }
       
       // PRIORITY 4: Last fallback to custom JWT token
