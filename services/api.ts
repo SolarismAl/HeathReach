@@ -162,36 +162,54 @@ class ApiService {
         return firebaseToken;
       }
       
-      // PRIORITY 2: Try to get fresh Firebase ID token from Custom Auth
-      console.log('No stored token, attempting to get fresh token from current user...');
-      const { default: CustomAuthService } = await import('./auth-service');
-      const currentUser = await CustomAuthService.getCurrentUser();
+      // PRIORITY 2: Check for userToken (stored during login)
+      const userToken = await AsyncStorage.getItem('userToken');
+      console.log('Stored userToken:', userToken ? `Present (length: ${userToken.length})` : 'NULL');
       
-      console.log('Custom Auth current user:', currentUser ? 'Present' : 'NULL');
-      
-      if (currentUser) {
-        console.log('Current user UID:', currentUser.uid);
-        console.log('Current user email:', currentUser.email);
-        console.log('Getting fresh Firebase ID token from current user');
-        try {
-          // Get token from custom auth service
-          const freshIdToken = await currentUser.getIdToken();
-          console.log('Got fresh Firebase ID token (length):', freshIdToken?.length || 0);
-          
-          if (freshIdToken) {
-            // Store the fresh token
-            await this.setFirebaseIdToken(freshIdToken);
-            console.log('✅ Using fresh Firebase ID token');
-            return freshIdToken;
-          }
-        } catch (tokenError) {
-          console.error('Error getting fresh Firebase ID token:', tokenError);
-        }
-      } else {
-        console.log('No current user found');
+      if (userToken) {
+        console.log('✅ Using stored userToken for API call');
+        // Also store it as firebase_id_token for consistency
+        await this.setFirebaseIdToken(userToken);
+        return userToken;
       }
       
-      // PRIORITY 3: Last fallback to custom JWT token
+      // PRIORITY 3: Try to get fresh Firebase ID token from Custom Auth (only in development)
+      // This may fail in production builds due to dynamic imports
+      if (__DEV__) {
+        console.log('Development mode: attempting to get fresh token from current user...');
+        try {
+          const { default: CustomAuthService } = await import('./auth-service');
+          const currentUser = await CustomAuthService.getCurrentUser();
+          
+          console.log('Custom Auth current user:', currentUser ? 'Present' : 'NULL');
+          
+          if (currentUser) {
+            console.log('Current user UID:', currentUser.uid);
+            console.log('Current user email:', currentUser.email);
+            console.log('Getting fresh Firebase ID token from current user');
+            try {
+              // Get token from custom auth service
+              const freshIdToken = await currentUser.getIdToken();
+              console.log('Got fresh Firebase ID token (length):', freshIdToken?.length || 0);
+              
+              if (freshIdToken) {
+                // Store the fresh token
+                await this.setFirebaseIdToken(freshIdToken);
+                console.log('✅ Using fresh Firebase ID token');
+                return freshIdToken;
+              }
+            } catch (tokenError) {
+              console.error('Error getting fresh Firebase ID token:', tokenError);
+            }
+          } else {
+            console.log('No current user found');
+          }
+        } catch (importError) {
+          console.error('Error importing auth-service:', importError);
+        }
+      }
+      
+      // PRIORITY 4: Last fallback to custom JWT token
       const customToken = await AsyncStorage.getItem('auth_token');
       console.log('Stored custom token:', customToken ? `Present (length: ${customToken.length})` : 'NULL');
       

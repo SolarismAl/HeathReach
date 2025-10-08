@@ -281,9 +281,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   };
 
   const signOut = async () => {
-    setLoading(true);
     try {
       console.log('AuthContext: Starting logout process...');
+      
+      // Set loading BEFORE clearing user to prevent UI flicker
+      setLoading(true);
       
       // Logout from backend API first (to revoke tokens)
       console.log('AuthContext: Calling backend logout...');
@@ -298,9 +300,15 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       setFirebaseUser(null);
       console.log('AuthContext: User signed out successfully');
       
-      // Navigate to auth page
-      console.log('AuthContext: Redirecting to login page...');
-      router.replace('/auth');
+      // IMPORTANT: Set loading to false BEFORE navigation
+      setLoading(false);
+      
+      // Small delay to ensure state updates propagate
+      await new Promise(resolve => setTimeout(resolve, 100));
+      
+      // Navigate to landing page (index)
+      console.log('AuthContext: Redirecting to landing page...');
+      router.replace('/');
     } catch (error) {
       console.error('Sign out error:', error);
       // Even if API fails, still clear local state
@@ -308,10 +316,14 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       setFirebaseUser(null);
       console.log('AuthContext: Cleared local state despite error');
       
-      // Still navigate to auth page
-      router.replace('/auth');
-    } finally {
+      // Set loading to false
       setLoading(false);
+      
+      // Small delay to ensure state updates propagate
+      await new Promise(resolve => setTimeout(resolve, 100));
+      
+      // Still navigate to landing page
+      router.replace('/');
     }
   };
 

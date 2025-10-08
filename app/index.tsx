@@ -27,6 +27,11 @@ export default function LandingPage() {
     console.log('LandingPage - loading:', loading);
     console.log('LandingPage - hasRedirected:', hasRedirected.current);
     
+    // Reset redirect flag when user is null (after logout)
+    if (!user) {
+      hasRedirected.current = false;
+    }
+    
     if (!loading && user && !hasRedirected.current) {
       console.log('LandingPage - User is authenticated, redirecting based on role:', user.role);
       hasRedirected.current = true;
@@ -48,7 +53,6 @@ export default function LandingPage() {
       }
     } else if (!loading && !user) {
       console.log('LandingPage - No user, staying on landing page');
-      hasRedirected.current = false; // Reset for next login
     } else {
       console.log('LandingPage - Still loading, waiting...');
     }
