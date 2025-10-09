@@ -52,22 +52,34 @@ export class CustomAuthService {
           console.log('✅ Successfully exchanged custom token for Firebase ID token');
           console.log('Firebase ID token length:', idToken.length);
           
-          // Store both tokens
+          // Store tokens in MULTIPLE keys for maximum redundancy
           await AsyncStorage.setItem('auth_token', customToken); // Custom token
           await AsyncStorage.setItem('firebase_id_token', idToken); // ID token for API calls
+          await AsyncStorage.setItem('userToken', idToken); // Also store as userToken
           await AsyncStorage.setItem('user_data', JSON.stringify(data.data.user));
-          console.log('✅ All tokens stored successfully');
+          await AsyncStorage.setItem('userData', JSON.stringify(data.data.user)); // Also store as userData
+          console.log('✅ All tokens stored successfully in multiple keys');
+          
+          // Verify storage
+          const verify1 = await AsyncStorage.getItem('firebase_id_token');
+          const verify2 = await AsyncStorage.getItem('userToken');
+          console.log('Token storage verification:', {
+            firebase_id_token: verify1 ? 'Stored' : 'FAILED',
+            userToken: verify2 ? 'Stored' : 'FAILED'
+          });
           
         } catch (tokenError: any) {
           console.error('❌ Failed to exchange custom token:', tokenError);
           console.error('Token error details:', tokenError?.message || 'Unknown error');
           
-          // CRITICAL: If token exchange fails, we cannot make authenticated API calls
-          // Store the custom token as fallback but warn the user
+          // CRITICAL: If token exchange fails, store custom token in all keys
+          console.error('⚠️ WARNING: Token exchange failed, storing custom token as fallback');
           await AsyncStorage.setItem('auth_token', customToken);
           await AsyncStorage.setItem('firebase_id_token', customToken);
+          await AsyncStorage.setItem('userToken', customToken);
           await AsyncStorage.setItem('user_data', JSON.stringify(data.data.user));
-          console.log('⚠️ WARNING: Stored custom token as fallback - API calls may fail');
+          await AsyncStorage.setItem('userData', JSON.stringify(data.data.user));
+          console.log('⚠️ Stored custom token in all keys - API calls may work with backend custom token verification');
         }
         
         console.log('Backend user data:', data.data.user);
@@ -185,6 +197,8 @@ export class CustomAuthService {
 
   static async getCurrentUser(): Promise<any | null> {
     try {
+      console.log('CustomAuthService.getCurrentUser: Starting...');
+      
       // First try to get the current Firebase user
       try {
         const { getFirebaseAuth } = await import('./firebase');
@@ -193,29 +207,55 @@ export class CustomAuthService {
         
         if (firebaseUser) {
           console.log('CustomAuthService: Found Firebase user:', firebaseUser.uid);
+          console.log('CustomAuthService: Firebase user has getIdToken method:', typeof firebaseUser.getIdToken === 'function');
           return firebaseUser;
+        } else {
+          console.log('CustomAuthService: No Firebase currentUser, using fallback');
         }
       } catch (firebaseError) {
         console.error('CustomAuthService: Error getting Firebase user:', firebaseError);
       }
       
-      // Fallback to stored user data with mock getIdToken method
+      // CRITICAL FALLBACK for production builds where Firebase auth might not persist
+      // Check all possible token storage locations
+      const firebaseIdToken = await AsyncStorage.getItem('firebase_id_token');
+      const userToken = await AsyncStorage.getItem('userToken');
+      const authToken = await AsyncStorage.getItem('auth_token');
       const userData = await AsyncStorage.getItem('user_data');
-      const token = await AsyncStorage.getItem('firebase_id_token');
+      
+      console.log('CustomAuthService: Token availability:', {
+        firebase_id_token: firebaseIdToken ? 'Present' : 'NULL',
+        userToken: userToken ? 'Present' : 'NULL',
+        auth_token: authToken ? 'Present' : 'NULL',
+        user_data: userData ? 'Present' : 'NULL'
+      });
+      
+      // Use the first available token
+      const token = firebaseIdToken || userToken || authToken;
       
       if (userData && token) {
         const user = JSON.parse(userData);
+        console.log('CustomAuthService: Creating mock user with stored token');
         return {
           ...user,
           uid: user.user_id || user.uid,
           email: user.email,
-          getIdToken: async () => token
+          // IMPORTANT: Return the token directly, not as a function that might fail
+          getIdToken: async (forceRefresh?: boolean) => {
+            console.log('Mock getIdToken called, forceRefresh:', forceRefresh);
+            // If force refresh requested, try to get fresh token from backend
+            if (forceRefresh) {
+              console.log('Force refresh requested but not supported in mock user, returning stored token');
+            }
+            return token;
+          }
         };
       }
       
+      console.log('CustomAuthService: No user data or token found, returning null');
       return null;
     } catch (error) {
-      console.error('Error getting current user:', error);
+      console.error('CustomAuthService: Error in getCurrentUser:', error);
       return null;
     }
   }
@@ -280,10 +320,13 @@ export class CustomAuthService {
           const freshIdToken = await userCredential.user.getIdToken();
           console.log('Fresh Firebase ID token obtained');
           
-          // Store tokens and user data
+          // Store tokens in MULTIPLE keys for maximum redundancy
           await AsyncStorage.setItem('auth_token', data.data.token);
           await AsyncStorage.setItem('firebase_id_token', freshIdToken);
+          await AsyncStorage.setItem('userToken', freshIdToken);
           await AsyncStorage.setItem('user_data', JSON.stringify(data.data.user));
+          await AsyncStorage.setItem('userData', JSON.stringify(data.data.user));
+          console.log('✅ Google tokens stored in multiple keys');
           
           console.log('Google user data:', data.data.user);
           console.log('Google user role:', data.data.user.role);
@@ -310,7 +353,10 @@ export class CustomAuthService {
           // Fallback to original token if Firebase sign-in fails
           await AsyncStorage.setItem('auth_token', data.data.token);
           await AsyncStorage.setItem('firebase_id_token', firebaseToken);
+          await AsyncStorage.setItem('userToken', firebaseToken);
           await AsyncStorage.setItem('user_data', JSON.stringify(data.data.user));
+          await AsyncStorage.setItem('userData', JSON.stringify(data.data.user));
+          console.log('⚠️ Google tokens stored with fallback token in multiple keys');
           
           return {
             user: {
