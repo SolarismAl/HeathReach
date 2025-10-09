@@ -1,17 +1,10 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import apiService from './api';
 import { getFirebaseAuth } from './firebase';
 import { signInWithCustomToken } from 'firebase/auth';
 import DebugHelper from '../utils/debugHelper';
 
 console.log('=== CUSTOM AUTH SERVICE INITIALIZATION ===');
-
-// Custom authentication service with proper Firebase integration
-export class CustomAuthService {
-  
-  /**
-   * Sign in with email and password using Firebase Authentication
-   * This is the CORRECT flow that works in both development and production
-   */
   static async signInWithEmail(email: string, password: string): Promise<{ success: boolean; user?: any; error?: string }> {
     try {
       console.log('=== FIREBASE EMAIL/PASSWORD SIGN-IN ===');
@@ -21,109 +14,7 @@ export class CustomAuthService {
       // STEP 1: Sign in with Firebase Authentication directly
       console.log('Step 1: Signing in with Firebase Authentication...');
       const { signInWithEmailAndPassword } = await import('firebase/auth');
-      
-      const auth = await getFirebaseAuth();
-      const userCredential = await signInWithEmailAndPassword(auth, email, password);
-      const firebaseUser = userCredential.user;
-      
-      console.log('✅ Firebase sign-in successful');
-      console.log('Firebase UID:', firebaseUser.uid);
-      console.log('Firebase email:', firebaseUser.email);
-      
-      // STEP 2: Get Firebase ID token
-      console.log('Step 2: Getting Firebase ID token...');
-      const firebaseIdToken = await firebaseUser.getIdToken();
-      console.log('✅ Got Firebase ID token (length):', firebaseIdToken.length);
-      console.log('Firebase ID token preview:', firebaseIdToken.substring(0, 50) + '...');
-      
-      DebugHelper.logAuth('Firebase authentication successful', {
-        uid: firebaseUser.uid,
-        email: firebaseUser.email,
-        tokenLength: firebaseIdToken.length
-      });
-      
-      // STEP 3: Send Firebase ID token to backend to get user profile
-      console.log('Step 3: Sending Firebase ID token to backend...');
-      const response = await fetch('https://healthreach-api.onrender.com/api/auth/login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
-        },
-        body: JSON.stringify({
-          idToken: firebaseIdToken  // Send Firebase ID token, not email/password
-        })
-      });
-
-      console.log('Backend response status:', response.status);
-      const data = await response.json();
-      console.log('Backend response data:', data);
-
-      if (data.success && data.data?.user) {
-        console.log('✅ Backend profile retrieved successfully');
-        console.log('User role:', data.data.user.role);
-        
-        // STEP 4: Store the Firebase ID token (NOT the custom token from backend)
-        // The backend returns a custom token, but we don't need it for API calls
-        // We use the Firebase ID token directly for all API calls
-        console.log('Step 4: Storing Firebase ID token...');
-        await AsyncStorage.setItem('firebase_id_token', firebaseIdToken);
-        await AsyncStorage.setItem('userToken', firebaseIdToken);
-        await AsyncStorage.setItem('user_data', JSON.stringify(data.data.user));
-        await AsyncStorage.setItem('userData', JSON.stringify(data.data.user));
-        console.log('✅ Firebase ID token and user data stored');
-        
-        // Verify storage
-        const verify1 = await AsyncStorage.getItem('firebase_id_token');
-        const verify2 = await AsyncStorage.getItem('userToken');
-        const verificationResult = {
-          firebase_id_token: verify1 ? 'Stored' : 'FAILED',
-          userToken: verify2 ? 'Stored' : 'FAILED',
-          tokenLength: verify1?.length || 0
-        };
-        console.log('Token storage verification:', verificationResult);
-        DebugHelper.logAuth('Token storage verified', verificationResult);
-        
-        return {
-          success: true,
-          user: {
-            user_id: data.data.user.user_id,
-            name: data.data.user.name,
-            email: data.data.user.email,
-            role: data.data.user.role,
-            contact_number: data.data.user.contact_number,
-            address: data.data.user.address,
-            is_active: data.data.user.is_active,
-            created_at: data.data.user.created_at,
-            updated_at: data.data.user.updated_at,
-            // Also include Firebase-style fields for compatibility
-            uid: firebaseUser.uid,
-            displayName: data.data.user.name,
-            idToken: firebaseIdToken
-          }
-        };
-      } else {
-        console.error('❌ Backend profile retrieval failed:', data.message);
-        DebugHelper.logAuth('Backend profile retrieval failed', data.message);
-        return {
-          success: false,
-          error: data.message || 'Failed to retrieve user profile from backend'
-        };
-      }
-    } catch (error: any) {
-      console.error('❌ Sign-in error:', error);
-      console.error('Error code:', error.code);
-      console.error('Error message:', error.message);
-      DebugHelper.logAuth('Sign-in failed', { code: error.code, message: error.message });
-      
-      return {
-        success: false,
-        error: error.message || 'Authentication failed'
-      };
-    }
-  }
-
-  static async createUserWithEmail(email: string, password: string): Promise<{ user: any; idToken: string }> {
+      const { getFirebaseAuth } = await import('./firebase');
     try {
       console.log('=== CUSTOM AUTH REGISTRATION ===');
       
@@ -167,7 +58,7 @@ export class CustomAuthService {
       console.log('=== CUSTOM AUTH SIGN-OUT ===');
       
       // Call backend logout
-      const token = await AsyncStorage.getItem('firebase_id_token');
+      const token = await AsyncStorage.getItem('auth_token');
       if (token) {
         try {
           await fetch('https://healthreach-api.onrender.com/api/auth/logout', {
@@ -181,16 +72,6 @@ export class CustomAuthService {
         } catch (logoutError) {
           console.error('Backend logout error:', logoutError);
         }
-      }
-      
-      // Sign out from Firebase
-      try {
-        const { signOut: firebaseSignOut } = await import('firebase/auth');
-        const auth = await getFirebaseAuth();
-        await firebaseSignOut(auth);
-        console.log('Firebase sign-out successful');
-      } catch (firebaseError) {
-        console.error('Firebase sign-out error:', firebaseError);
       }
       
       // Clear local storage
@@ -212,6 +93,7 @@ export class CustomAuthService {
       
       // First try to get the current Firebase user
       try {
+        const { getFirebaseAuth } = await import('./firebase');
         const auth = await getFirebaseAuth();
         const firebaseUser = auth.currentUser;
         
@@ -240,19 +122,20 @@ export class CustomAuthService {
         user_data: userData ? 'Present' : 'NULL'
       });
       
-      // Use the first available token (should be Firebase ID token)
-      const token = firebaseIdToken || userToken;
+      // Use the first available token
+      const token = firebaseIdToken || userToken || authToken;
       
       if (userData && token) {
         const user = JSON.parse(userData);
-        console.log('CustomAuthService: Creating mock user with stored Firebase ID token');
+        console.log('CustomAuthService: Creating mock user with stored token');
         return {
           ...user,
           uid: user.user_id || user.uid,
           email: user.email,
-          // IMPORTANT: Return the Firebase ID token
+          // IMPORTANT: Return the token directly, not as a function that might fail
           getIdToken: async (forceRefresh?: boolean) => {
             console.log('Mock getIdToken called, forceRefresh:', forceRefresh);
+            // If force refresh requested, try to get fresh token from backend
             if (forceRefresh) {
               console.log('Force refresh requested but not supported in mock user, returning stored token');
             }
