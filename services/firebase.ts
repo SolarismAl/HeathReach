@@ -122,16 +122,40 @@ const initializeFirebase = async () => {
       // For React Native, we need to be more careful about auth initialization
       if (Platform.OS !== 'web') {
         console.log('Initializing Firebase Auth for React Native environment');
-        // Add a small delay to ensure proper initialization
-        await new Promise(resolve => setTimeout(resolve, 100));
+        // Add a delay to ensure Firebase app is fully ready
+        await new Promise(resolve => setTimeout(resolve, 500));
       }
       
-      auth = getAuth(firebaseApp);
-      console.log('Firebase Auth initialized successfully');
-      console.log('Auth instance created');
+      // Initialize auth with retry mechanism
+      let authInitAttempts = 0;
+      const maxAuthAttempts = 3;
       
-      // Verify auth is working
-      console.log('Auth currentUser:', auth.currentUser);
+      while (authInitAttempts < maxAuthAttempts) {
+        try {
+          auth = getAuth(firebaseApp);
+          console.log('Firebase Auth initialized successfully');
+          console.log('Auth instance created');
+          
+          // Verify auth is working by checking if it has required methods
+          if (typeof auth.currentUser !== 'undefined') {
+            console.log('Auth instance verified - currentUser property exists');
+            console.log('Auth currentUser:', auth.currentUser);
+            break; // Success!
+          } else {
+            throw new Error('Auth instance missing required properties');
+          }
+        } catch (attemptError: any) {
+          authInitAttempts++;
+          console.error(`Auth init attempt ${authInitAttempts}/${maxAuthAttempts} failed:`, attemptError.message);
+          
+          if (authInitAttempts < maxAuthAttempts) {
+            console.log(`Retrying auth initialization in ${authInitAttempts * 500}ms...`);
+            await new Promise(resolve => setTimeout(resolve, authInitAttempts * 500));
+          } else {
+            throw attemptError;
+          }
+        }
+      }
       
     } catch (authError: any) {
       console.error('Error initializing Firebase Auth:', authError);

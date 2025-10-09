@@ -17,12 +17,23 @@ import notificationService from "../services/notifications";
 import connectivityService from "../services/connectivity";
 import { darkColors } from "../styles/darkMode";
 import { colors as lightColors } from "../styles/neumorphism";
+import { getFirebaseAuth } from "../services/firebase";
 
 // Keep the splash screen visible while we fetch resources
 console.log('=== APP LAYOUT LOADING ===');
 SplashScreen.preventAutoHideAsync().catch((err) => {
   console.warn('SplashScreen.preventAutoHideAsync failed:', err);
 });
+
+// Pre-initialize Firebase to avoid "Component Auth has not been registered yet" error
+console.log('Pre-initializing Firebase...');
+getFirebaseAuth()
+  .then(() => {
+    console.log('✅ Firebase pre-initialized successfully');
+  })
+  .catch((error) => {
+    console.error('❌ Firebase pre-initialization failed:', error);
+  });
 
 // ✅ Custom Dark Theme
 const HealthReachDarkTheme = {
