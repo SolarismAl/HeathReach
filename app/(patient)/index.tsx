@@ -25,9 +25,11 @@ export default function PatientDashboard() {
   const [refreshing, setRefreshing] = useState(false);
   const [loading, setLoading] = useState(true);
   const [currentDateTime, setCurrentDateTime] = useState(new Date());
+  const [tokenDebugInfo, setTokenDebugInfo] = useState<string>('Checking tokens...');
 
   useEffect(() => {
     loadDashboardData();
+    checkTokensOnLoad();
     
     // Update time every minute
     const timer = setInterval(() => {
@@ -37,6 +39,16 @@ export default function PatientDashboard() {
     return () => clearInterval(timer);
   }, []);
 
+  const checkTokensOnLoad = async () => {
+    try {
+      const status = await DebugHelper.checkTokenStatus();
+      const tokenCount = Object.values(status.tokens).filter(Boolean).length;
+      setTokenDebugInfo(`Tokens: ${tokenCount}/5 stored | ${status.hasTokens ? '✅ READY' : '❌ MISSING'}`);
+    } catch (error) {
+      setTokenDebugInfo('❌ Error checking tokens');
+    }
+  };
+
   const loadDashboardData = async () => {
     try {
       DebugHelper.log('Loading dashboard data...');
@@ -44,9 +56,17 @@ export default function PatientDashboard() {
       // Check token status before making requests
       const tokenStatus = await DebugHelper.checkTokenStatus();
       if (!tokenStatus.hasTokens) {
-        DebugHelper.showErrorWithLogs(
-          'No Tokens Found',
-          'Cannot load dashboard data. Please login again.'
+        // Show simple alert that doesn't depend on DebugHelper methods
+        Alert.alert(
+          '❌ No Tokens Found',
+          'Cannot load dashboard data. Tokens are missing from storage.\n\nPlease login again.',
+          [
+            { text: 'Check Tokens', onPress: async () => {
+              const status = await DebugHelper.checkTokenStatus();
+              Alert.alert('Token Status', status.details);
+            }},
+            { text: 'OK' }
+          ]
         );
         return;
       }
@@ -183,6 +203,24 @@ export default function PatientDashboard() {
         <Text style={styles.welcomeText}>
           Welcome back, {user?.name?.split(' ')[0] || 'Patient'}!
         </Text>
+        
+        {/* TOKEN DEBUG INFO - VISIBLE ON SCREEN */}
+        <View style={{
+          backgroundColor: 'rgba(255, 255, 255, 0.2)',
+          padding: 12,
+          borderRadius: 8,
+          marginVertical: 12,
+        }}>
+          <Text style={{
+            color: '#FFF',
+            fontSize: 14,
+            fontWeight: '600',
+            textAlign: 'center',
+          }}>
+            🔍 DEBUG: {tokenDebugInfo}
+          </Text>
+        </View>
+        
         <View style={styles.dateTimeContainer}>
           <View style={styles.dateTimeRow}>
             <Ionicons name="calendar-outline" size={16} color="rgba(255, 255, 255, 0.9)" />
@@ -201,10 +239,32 @@ export default function PatientDashboard() {
       {/* Debug Button - Remove after fixing */}
       <TouchableOpacity
         style={styles.debugButton}
-        onPress={() => DebugHelper.showTokenStatusAlert()}
+        onPress={async () => {
+          try {
+            await DebugHelper.showTokenStatusAlert();
+          } catch (error) {
+            Alert.alert('Debug Error', 'Could not show token status: ' + error);
+          }
+        }}
       >
         <Ionicons name="bug" size={20} color="#FFF" />
-        <Text style={styles.debugButtonText}>Debug Tokens</Text>
+        <Text style={styles.debugButtonText}>🔍 DEBUG TOKENS (TAP ME)</Text>
+      </TouchableOpacity>
+      
+      {/* Simple token check on load */}
+      <TouchableOpacity
+        style={[styles.debugButton, { backgroundColor: '#4A90E2', marginTop: 8 }]}
+        onPress={async () => {
+          const status = await DebugHelper.checkTokenStatus();
+          Alert.alert(
+            'Quick Token Check',
+            `Has Tokens: ${status.hasTokens ? 'YES ✅' : 'NO ❌'}\n\n${status.details}`,
+            [{ text: 'OK' }]
+          );
+        }}
+      >
+        <Ionicons name="information-circle" size={20} color="#FFF" />
+        <Text style={styles.debugButtonText}>Quick Token Check</Text>
       </TouchableOpacity>
 
       {/* Quick Actions */}
