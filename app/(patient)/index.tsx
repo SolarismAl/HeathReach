@@ -16,6 +16,7 @@ import apiService from '../../services/api';
 import { Appointment, Notification, User } from '../../types';
 import { ProtectedRoute } from '@/components/ProtectedRoute';
 import { neumorphism, colors, spacing, borderRadius, typography, shadows } from '../../styles/neumorphism';
+import DebugHelper from '../../utils/debugHelper';
 
 export default function PatientDashboard() {
   const [user, setUser] = useState<User | null>(null);
@@ -38,6 +39,18 @@ export default function PatientDashboard() {
 
   const loadDashboardData = async () => {
     try {
+      DebugHelper.log('Loading dashboard data...');
+      
+      // Check token status before making requests
+      const tokenStatus = await DebugHelper.checkTokenStatus();
+      if (!tokenStatus.hasTokens) {
+        DebugHelper.showErrorWithLogs(
+          'No Tokens Found',
+          'Cannot load dashboard data. Please login again.'
+        );
+        return;
+      }
+      
       const [profileResponse, appointmentsResponse, notificationsResponse] = await Promise.all([
         apiService.getProfile(),
         apiService.getAppointments(),
@@ -46,17 +59,27 @@ export default function PatientDashboard() {
 
       if (profileResponse.success) {
         setUser(profileResponse.data || null);
+        DebugHelper.log('✅ Profile loaded');
+      } else {
+        DebugHelper.log('❌ Profile load failed', profileResponse.message);
       }
 
       if (appointmentsResponse.success) {
         setUpcomingAppointments(appointmentsResponse.data || []);
+        DebugHelper.log('✅ Appointments loaded', { count: appointmentsResponse.data?.length || 0 });
+      } else {
+        DebugHelper.log('❌ Appointments load failed', appointmentsResponse.message);
       }
 
       if (notificationsResponse.success) {
         setRecentNotifications(notificationsResponse.data || []);
+        DebugHelper.log('✅ Notifications loaded', { count: notificationsResponse.data?.length || 0 });
+      } else {
+        DebugHelper.log('❌ Notifications load failed', notificationsResponse.message);
       }
     } catch (error: any) {
-      Alert.alert('Error', 'Failed to load dashboard data');
+      DebugHelper.log('❌ Dashboard load error', error.message);
+      DebugHelper.showErrorWithLogs('Error', 'Failed to load dashboard data: ' + error.message);
     } finally {
       setLoading(false);
     }
@@ -174,6 +197,15 @@ export default function PatientDashboard() {
           How can we help you today?
         </Text>
       </View>
+
+      {/* Debug Button - Remove after fixing */}
+      <TouchableOpacity
+        style={styles.debugButton}
+        onPress={() => DebugHelper.showTokenStatusAlert()}
+      >
+        <Ionicons name="bug" size={20} color="#FFF" />
+        <Text style={styles.debugButtonText}>Debug Tokens</Text>
+      </TouchableOpacity>
 
       {/* Quick Actions */}
       <View style={styles.quickActionsSection}>
@@ -378,6 +410,22 @@ const styles = StyleSheet.create({
   welcomeSubtext: {
     ...typography.body1,
     color: 'rgba(255, 255, 255, 0.9)',
+  },
+  debugButton: {
+    backgroundColor: '#FF6B6B',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: spacing.md,
+    marginHorizontal: spacing.md,
+    marginTop: spacing.md,
+    borderRadius: borderRadius.md,
+    gap: spacing.sm,
+  },
+  debugButtonText: {
+    color: '#FFFFFF',
+    fontWeight: '600',
+    fontSize: 14,
   },
   quickActionsSection: {
     padding: spacing.lg,

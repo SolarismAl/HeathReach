@@ -1,6 +1,7 @@
 import { User, Appointment, HealthCenter, Service, Notification, RegisterData, LoginData } from '../types';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios, { AxiosInstance } from 'axios';
+import DebugHelper from '../utils/debugHelper';
 
 
 export interface ApiResponse<T> {
@@ -71,30 +72,56 @@ class ApiService {
         const token = await this.getToken();
         console.log('Token from getToken():', token ? `Present (length: ${token.length})` : 'NULL');
         
+        // DEBUG: Log to helper
+        DebugHelper.logApiRequest(config.url || 'unknown', config.method || 'GET', !!token);
+        
         if (token) {
           config.headers.Authorization = `Bearer ${token}`;
           console.log('Authorization header set with token');
+          DebugHelper.log('✅ Token added to request', { url: config.url, tokenLength: token.length });
         } else {
           console.log('NO TOKEN - Authorization header NOT set');
+          DebugHelper.log('❌ NO TOKEN for request', { url: config.url });
         }
         
         console.log('Final request headers:', config.headers);
         return config;
       },
       (error) => {
+        DebugHelper.log('Request interceptor error', error.message);
         return Promise.reject(error);
       }
     );
 
     // Response interceptor for error handling with circuit breaker
     this.api.interceptors.response.use(
-      (response) => response,
+      (response) => {
+        // DEBUG: Log successful responses
+        DebugHelper.logApiResponse(
+          response.config.url || 'unknown',
+          response.status,
+          true,
+          response.data?.message
+        );
+        return response;
+      },
       async (error) => {
         const originalRequest = error.config;
+        const status = error.response?.status;
+        const url = originalRequest?.url || 'unknown';
+        
+        // DEBUG: Log error responses
+        DebugHelper.logApiResponse(
+          url,
+          status || 0,
+          false,
+          error.response?.data?.message || error.message
+        );
         
         // Prevent infinite retry loops with circuit breaker
-        if (error.response?.status === 401 && !originalRequest._retryCount) {
+        if (status === 401 && !originalRequest._retryCount) {
           console.log('Received 401 error, attempting token refresh...');
+          DebugHelper.log('⚠️ 401 Unauthorized - attempting token refresh', { url });
           originalRequest._retryCount = 1; // Mark as retried to prevent infinite loops
           
           // Try to refresh the Firebase ID token
@@ -107,6 +134,7 @@ class ApiService {
               const freshIdToken = await currentUser.getIdToken(true);
               console.log('Fresh Firebase ID token obtained (first 50 chars):', freshIdToken.substring(0, 50) + '...');
               await this.setFirebaseIdToken(freshIdToken);
+              DebugHelper.log('✅ Token refreshed, retrying request', { url });
               
               // Retry the original request with fresh token
               originalRequest.headers.Authorization = `Bearer ${freshIdToken}`;
@@ -115,16 +143,19 @@ class ApiService {
               return this.api.request(originalRequest);
             } else {
               console.log('No current Firebase user, clearing tokens and redirecting to login');
+              DebugHelper.log('❌ No current user for token refresh', { url });
               await this.clearToken();
               // Could trigger logout/redirect here if needed
             }
           } catch (refreshError) {
             console.error('Token refresh failed:', refreshError);
+            DebugHelper.log('❌ Token refresh failed', refreshError);
             await this.clearToken();
             // Could trigger logout/redirect here if needed
           }
-        } else if (error.response?.status === 401 && originalRequest._retryCount) {
+        } else if (status === 401 && originalRequest._retryCount) {
           console.error('Token refresh failed - still getting 401 after retry. Clearing tokens.');
+          DebugHelper.log('❌ Still 401 after retry - clearing tokens', { url });
           await this.clearToken();
           // Could trigger logout/redirect here if needed
         }

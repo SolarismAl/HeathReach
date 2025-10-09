@@ -2,6 +2,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import apiService from './api';
 import { getFirebaseAuth } from './firebase';
 import { signInWithCustomToken } from 'firebase/auth';
+import DebugHelper from '../utils/debugHelper';
 
 console.log('=== CUSTOM AUTH SERVICE INITIALIZATION ===');
 
@@ -63,10 +64,12 @@ export class CustomAuthService {
           // Verify storage
           const verify1 = await AsyncStorage.getItem('firebase_id_token');
           const verify2 = await AsyncStorage.getItem('userToken');
-          console.log('Token storage verification:', {
+          const verificationResult = {
             firebase_id_token: verify1 ? 'Stored' : 'FAILED',
             userToken: verify2 ? 'Stored' : 'FAILED'
-          });
+          };
+          console.log('Token storage verification:', verificationResult);
+          DebugHelper.logAuth('Token storage verified', verificationResult);
           
         } catch (tokenError: any) {
           console.error('❌ Failed to exchange custom token:', tokenError);

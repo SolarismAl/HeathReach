@@ -19,6 +19,7 @@ import GoogleSignInModal from '@/components/GoogleSignInModal';
 import Toast from '@/components/Toast';
 import { useToast } from '@/hooks/useToast';
 import { neumorphism, colors, spacing, borderRadius, typography, shadows } from '../../styles/neumorphism';
+import DebugHelper from '../../utils/debugHelper';
 
 export default function LoginScreen() {
   const [email, setEmail] = useState('');
@@ -43,15 +44,31 @@ export default function LoginScreen() {
     setEmailLoading(true);
     try {
       console.log('Calling signInWithEmail...');
+      DebugHelper.logAuth('Login attempt', { email });
+      
       await signInWithEmail(email.trim(), password);
       console.log('Login successful!');
-      showSuccess('Successfully signed in!');
+      DebugHelper.logAuth('Login successful');
+      
+      // Check token status after login
+      const tokenStatus = await DebugHelper.checkTokenStatus();
+      console.log('Token status after login:', tokenStatus);
+      
+      if (!tokenStatus.hasTokens) {
+        DebugHelper.showErrorWithLogs(
+          'Warning: No Tokens After Login',
+          'Login succeeded but tokens were not stored properly. You may experience authorization issues.'
+        );
+      } else {
+        showSuccess('Successfully signed in!');
+      }
       
       // Force navigation to index to trigger the redirect logic
       console.log('Navigating to index...');
       router.replace('/');
     } catch (error: any) {
       console.error('Login failed:', error);
+      DebugHelper.logAuth('Login failed', error.message);
       showError(error.message || 'Login failed');
     } finally {
       setEmailLoading(false);
