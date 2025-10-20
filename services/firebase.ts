@@ -108,14 +108,17 @@ const initializeFirebase = async () => {
       }
       
       // PRODUCTION FIX: Add delay to ensure mocks are fully registered
-      console.log('Waiting for environment setup...');
-      await new Promise(resolve => setTimeout(resolve, 100));
+      const envSetupDelay = __DEV__ ? 100 : 500;
+      console.log(`Waiting ${envSetupDelay}ms for environment setup...`);
+      await new Promise(resolve => setTimeout(resolve, envSetupDelay));
     }
     
     // Import Firebase modules - force web SDK
+    console.log('Importing Firebase modules...');
     const { initializeApp, getApps } = await import('firebase/app');
-    const { getAuth } = await import('firebase/auth');
+    const { getAuth, signInWithEmailAndPassword, signInWithCustomToken, signOut: firebaseSignOut } = await import('firebase/auth');
     const { getFirestore } = await import('firebase/firestore');
+    console.log('✅ All Firebase modules imported (including auth methods)');
     
     console.log('Firebase modules loaded successfully');
     const { 
@@ -173,7 +176,7 @@ const initializeFirebase = async () => {
       if (Platform.OS !== 'web') {
         console.log('Initializing Firebase Auth for React Native environment');
         // PRODUCTION FIX: Longer delay for production builds to ensure Firebase app is fully ready
-        const delay = __DEV__ ? 500 : 1500;
+        const delay = __DEV__ ? 500 : 3000; // 3 seconds for production
         console.log(`Waiting ${delay}ms for Firebase app to be ready...`);
         await new Promise(resolve => setTimeout(resolve, delay));
       }
@@ -228,7 +231,7 @@ const initializeFirebase = async () => {
           
           if (authInitAttempts < maxAuthAttempts) {
             // Exponential backoff with longer delays in production
-            const retryDelay = __DEV__ ? (authInitAttempts * 500) : (authInitAttempts * 1000);
+            const retryDelay = __DEV__ ? (authInitAttempts * 500) : (authInitAttempts * 2000); // 2s, 4s, 6s, 8s, 10s
             console.log(`⏳ Retrying auth initialization in ${retryDelay}ms...`);
             await new Promise(resolve => setTimeout(resolve, retryDelay));
             

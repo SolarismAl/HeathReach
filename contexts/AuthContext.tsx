@@ -38,6 +38,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [firebaseUser, setFirebaseUser] = useState<any | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [firebaseReady, setFirebaseReady] = useState(false);
 
   useEffect(() => {
     console.log('AuthContext: Initializing auth state');
@@ -56,14 +57,21 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       // CRITICAL: Pre-initialize Firebase to ensure auth component is registered
       // This prevents "component auth is not registered yet" errors in production
       console.log('AuthContext: Pre-initializing Firebase...');
+      console.log('AuthContext: This is BLOCKING - login will not work until complete');
       try {
         const { getFirebaseAuth } = await import('../services/firebase');
         console.log('AuthContext: Calling getFirebaseAuth to ensure initialization...');
-        await getFirebaseAuth();
+        const authInstance = await getFirebaseAuth();
         console.log('AuthContext: ✅ Firebase Auth pre-initialized successfully');
+        console.log('AuthContext: Auth instance ready:', !!authInstance);
+        setFirebaseReady(true);
+        console.log('AuthContext: ✅ Firebase is now ready for login attempts');
       } catch (preInitError) {
-        console.error('AuthContext: ⚠️ Firebase pre-initialization failed:', preInitError);
-        console.error('AuthContext: Continuing anyway, will rely on lazy initialization');
+        console.error('AuthContext: ❌ Firebase pre-initialization FAILED:', preInitError);
+        console.error('AuthContext: Login will NOT work until this is fixed');
+        setFirebaseReady(false);
+        // Don't continue - this is critical
+        throw preInitError;
       }
       
       try {
@@ -135,9 +143,17 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   const signInWithEmail = async (email: string, password: string) => {
     try {
+      // CRITICAL: Check if Firebase is ready before attempting login
+      if (!firebaseReady) {
+        console.error('AuthContext: ❌ Firebase not ready yet, cannot login');
+        console.error('AuthContext: Please wait for Firebase initialization to complete');
+        throw new Error('Firebase is still initializing. Please wait a moment and try again.');
+      }
+      
       setLoading(true);
       setError(null);
       console.log('AuthContext: Starting email sign in for:', email);
+      console.log('AuthContext: Firebase ready status:', firebaseReady);
 
       // Sign in with Custom Auth Service (handles both Firebase auth and backend)
       const authResult = await CustomAuthService.signInWithEmail(email, password);

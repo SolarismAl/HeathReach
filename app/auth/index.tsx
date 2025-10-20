@@ -37,9 +37,17 @@ export default function LoginScreen() {
       return;
     }
 
+    // Check if auth context is still loading (Firebase initializing)
+    if (loading) {
+      showError('Please wait, initializing authentication...');
+      console.log('Login blocked: Auth context still loading');
+      return;
+    }
+
     console.log('=== LOGIN ATTEMPT ===');
     console.log('Email:', email);
     console.log('Password:', password ? 'Present' : 'Missing');
+    console.log('Auth loading state:', loading);
 
     setEmailLoading(true);
     try {
@@ -144,12 +152,12 @@ export default function LoginScreen() {
             </View>
 
             <TouchableOpacity
-              style={[styles.loginButton, emailLoading && styles.loginButtonDisabled]}
+              style={[styles.loginButton, (emailLoading || loading) && styles.loginButtonDisabled]}
               onPress={handleLogin}
-              disabled={emailLoading}
+              disabled={emailLoading || loading}
             >
               <Text style={styles.loginButtonText}>
-                {emailLoading ? 'Logging In...' : 'Sign In'}
+                {loading ? 'Initializing...' : emailLoading ? 'Logging In...' : 'Sign In'}
               </Text>
             </TouchableOpacity>
 
