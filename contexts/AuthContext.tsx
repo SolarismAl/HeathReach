@@ -46,7 +46,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     
     const initAuth = async () => {
       // PRODUCTION FIX: Longer timeout for production builds
-      const timeoutDuration = __DEV__ ? 5000 : 10000; // 10 seconds for production
+      const timeoutDuration = __DEV__ ? 5000 : 20000; // 20 seconds for production
       const timeout = setTimeout(() => {
         console.warn(`AuthContext: Initialization timeout after ${timeoutDuration}ms - forcing loading to false`);
         if (mounted) {
@@ -57,21 +57,40 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       // CRITICAL: Pre-initialize Firebase to ensure auth component is registered
       // This prevents "component auth is not registered yet" errors in production
       console.log('AuthContext: Pre-initializing Firebase...');
-      console.log('AuthContext: This is BLOCKING - login will not work until complete');
-      try {
-        const { getFirebaseAuth } = await import('../services/firebase');
-        console.log('AuthContext: Calling getFirebaseAuth to ensure initialization...');
-        const authInstance = await getFirebaseAuth();
-        console.log('AuthContext: ✅ Firebase Auth pre-initialized successfully');
-        console.log('AuthContext: Auth instance ready:', !!authInstance);
-        setFirebaseReady(true);
-        console.log('AuthContext: ✅ Firebase is now ready for login attempts');
-      } catch (preInitError) {
-        console.error('AuthContext: ❌ Firebase pre-initialization FAILED:', preInitError);
-        console.error('AuthContext: Login will NOT work until this is fixed');
-        setFirebaseReady(false);
-        // Don't continue - this is critical
-        throw preInitError;
+      console.log('AuthContext: Attempting to initialize Firebase Auth...');
+      
+      let initAttempts = 0;
+      const maxAttempts = 3;
+      let initSuccess = false;
+      
+      while (initAttempts < maxAttempts && !initSuccess) {
+        try {
+          initAttempts++;
+          console.log(`AuthContext: Firebase init attempt ${initAttempts}/${maxAttempts}`);
+          
+          const { getFirebaseAuth } = await import('../services/firebase');
+          console.log('AuthContext: Calling getFirebaseAuth to ensure initialization...');
+          const authInstance = await getFirebaseAuth();
+          console.log('AuthContext: ✅ Firebase Auth pre-initialized successfully');
+          console.log('AuthContext: Auth instance ready:', !!authInstance);
+          setFirebaseReady(true);
+          initSuccess = true;
+          console.log('AuthContext: ✅ Firebase is now ready for login attempts');
+        } catch (preInitError: any) {
+          console.error(`AuthContext: ❌ Firebase init attempt ${initAttempts}/${maxAttempts} failed:`, preInitError?.message);
+          
+          if (initAttempts < maxAttempts) {
+            const retryDelay = initAttempts * 2000; // 2s, 4s
+            console.log(`AuthContext: Retrying in ${retryDelay}ms...`);
+            await new Promise(resolve => setTimeout(resolve, retryDelay));
+          } else {
+            console.error('AuthContext: ❌ All Firebase initialization attempts failed');
+            console.error('AuthContext: Error details:', preInitError);
+            setFirebaseReady(false);
+            setError('Failed to initialize Firebase. Please restart the app.');
+            // Don't throw - let the app continue but login won't work
+          }
+        }
       }
       
       try {

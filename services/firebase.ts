@@ -277,11 +277,26 @@ const initializeFirebase = async () => {
     console.log(`=== FIREBASE INIT COMPLETE (${endTime - startTime}ms) ===`);
     
     return { auth, firestore, firebaseApp };
-  } catch (error) {
+  } catch (error: any) {
     const endTime = Date.now();
     console.error(`=== FIREBASE INIT FAILED (${endTime - startTime}ms) ===`);
     console.error('Firebase initialization error:', error);
-    console.error('Error stack:', (error as Error)?.stack);
+    console.error('Error name:', error?.name);
+    console.error('Error message:', error?.message);
+    console.error('Error code:', error?.code);
+    console.error('Error stack:', error?.stack);
+    console.error('Platform:', Platform.OS);
+    console.error('Environment:', __DEV__ ? 'Development' : 'Production');
+    
+    // Log which step failed
+    if (!firebaseApp) {
+      console.error('FAILURE POINT: Firebase app initialization failed');
+    } else if (!auth) {
+      console.error('FAILURE POINT: Firebase Auth initialization failed');
+    } else if (!firestore) {
+      console.error('FAILURE POINT: Firestore initialization failed');
+    }
+    
     throw error;
   }
 };
