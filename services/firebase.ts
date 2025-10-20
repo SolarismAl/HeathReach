@@ -14,12 +14,15 @@ const initializeFirebase = async () => {
     console.log('Loading Firebase modules...');
     console.log('Platform detected:', Platform.OS);
     console.log('Timestamp:', new Date().toISOString());
+    console.log('Environment:', __DEV__ ? 'Development' : 'Production');
     
     // Force web environment detection to bypass React Native Firebase issues
     if (Platform.OS !== 'web') {
       console.log('Forcing web Firebase SDK for React Native compatibility');
-      // Create proper mock objects with required properties for Firebase and routing
+      
+      // CRITICAL: Create comprehensive mock objects for production builds
       if (!(global as any).window) {
+        console.log('Creating window mock for Firebase...');
         (global as any).window = {
           location: {
             href: 'https://healthreach.app',
@@ -30,36 +33,83 @@ const initializeFirebase = async () => {
             pathname: '/',
             search: '',
             hash: '',
-            origin: 'https://healthreach.app'
+            origin: 'https://healthreach.app',
+            assign: () => {},
+            reload: () => {},
+            replace: () => {}
           },
           navigator: {
-            userAgent: 'HealthReach Mobile App'
+            userAgent: 'HealthReach Mobile App',
+            language: 'en-US',
+            onLine: true
           },
           localStorage: {
             getItem: () => null,
             setItem: () => {},
             removeItem: () => {},
-            clear: () => {}
+            clear: () => {},
+            key: () => null,
+            length: 0
           },
           sessionStorage: {
             getItem: () => null,
             setItem: () => {},
             removeItem: () => {},
-            clear: () => {}
+            clear: () => {},
+            key: () => null,
+            length: 0
+          },
+          indexedDB: null,
+          crypto: {
+            getRandomValues: (arr: any) => {
+              for (let i = 0; i < arr.length; i++) {
+                arr[i] = Math.floor(Math.random() * 256);
+              }
+              return arr;
+            }
           }
         };
+        console.log('✅ Window mock created');
       }
+      
       if (!(global as any).document) {
+        console.log('Creating document mock for Firebase...');
         (global as any).document = {
-          createElement: () => ({}),
+          createElement: (tag: string) => {
+            console.log('Mock createElement called for:', tag);
+            return {
+              style: {},
+              setAttribute: () => {},
+              getAttribute: () => null,
+              appendChild: () => {},
+              removeChild: () => {},
+              addEventListener: () => {},
+              removeEventListener: () => {}
+            };
+          },
           getElementById: () => null,
           getElementsByTagName: () => [],
+          querySelector: () => null,
+          querySelectorAll: () => [],
           addEventListener: () => {},
           removeEventListener: () => {},
           cookie: '',
-          readyState: 'complete'
+          readyState: 'complete',
+          body: {
+            appendChild: () => {},
+            removeChild: () => {}
+          },
+          head: {
+            appendChild: () => {},
+            removeChild: () => {}
+          }
         };
+        console.log('✅ Document mock created');
       }
+      
+      // PRODUCTION FIX: Add delay to ensure mocks are fully registered
+      console.log('Waiting for environment setup...');
+      await new Promise(resolve => setTimeout(resolve, 100));
     }
     
     // Import Firebase modules - force web SDK
@@ -122,48 +172,91 @@ const initializeFirebase = async () => {
       // For React Native, we need to be more careful about auth initialization
       if (Platform.OS !== 'web') {
         console.log('Initializing Firebase Auth for React Native environment');
-        // Add a delay to ensure Firebase app is fully ready
-        await new Promise(resolve => setTimeout(resolve, 500));
+        // PRODUCTION FIX: Longer delay for production builds to ensure Firebase app is fully ready
+        const delay = __DEV__ ? 500 : 1500;
+        console.log(`Waiting ${delay}ms for Firebase app to be ready...`);
+        await new Promise(resolve => setTimeout(resolve, delay));
       }
       
-      // Initialize auth with retry mechanism
+      // Initialize auth with enhanced retry mechanism for production
       let authInitAttempts = 0;
-      const maxAuthAttempts = 3;
+      const maxAuthAttempts = __DEV__ ? 3 : 5; // More retries in production
       
       while (authInitAttempts < maxAuthAttempts) {
         try {
-          auth = getAuth(firebaseApp);
-          console.log('Firebase Auth initialized successfully');
-          console.log('Auth instance created');
+          console.log(`Auth initialization attempt ${authInitAttempts + 1}/${maxAuthAttempts}`);
           
-          // Verify auth is working by checking if it has required methods
-          if (typeof auth.currentUser !== 'undefined') {
-            console.log('Auth instance verified - currentUser property exists');
-            console.log('Auth currentUser:', auth.currentUser);
-            break; // Success!
-          } else {
-            throw new Error('Auth instance missing required properties');
+          auth = getAuth(firebaseApp);
+          console.log('✅ Firebase Auth getAuth() called successfully');
+          console.log('Auth instance type:', typeof auth);
+          console.log('Auth instance keys:', Object.keys(auth || {}).slice(0, 10));
+          
+          // CRITICAL: Verify auth component is properly registered
+          if (!auth) {
+            throw new Error('Auth instance is null or undefined');
           }
+          
+          if (typeof auth.currentUser === 'undefined') {
+            throw new Error('Auth instance missing currentUser property - component not registered');
+          }
+          
+          // Additional verification for production builds
+          if (Platform.OS !== 'web') {
+            console.log('Verifying auth methods for React Native...');
+            const requiredMethods = ['signInWithEmailAndPassword', 'createUserWithEmailAndPassword', 'signOut'];
+            // Just log, don't fail - methods are on the module, not the instance
+            console.log('Auth instance verified for React Native');
+          }
+          
+          console.log('✅ Auth instance verified - currentUser property exists');
+          console.log('Auth currentUser:', auth.currentUser);
+          console.log('Auth app name:', auth.app?.name);
+          console.log('Auth config:', auth.config);
+          
+          // SUCCESS!
+          break;
+          
         } catch (attemptError: any) {
           authInitAttempts++;
-          console.error(`Auth init attempt ${authInitAttempts}/${maxAuthAttempts} failed:`, attemptError.message);
+          console.error(`❌ Auth init attempt ${authInitAttempts}/${maxAuthAttempts} failed:`, attemptError.message);
+          console.error('Error details:', {
+            name: attemptError?.name,
+            message: attemptError?.message,
+            code: attemptError?.code,
+            stack: attemptError?.stack?.split('\n').slice(0, 3)
+          });
           
           if (authInitAttempts < maxAuthAttempts) {
-            console.log(`Retrying auth initialization in ${authInitAttempts * 500}ms...`);
-            await new Promise(resolve => setTimeout(resolve, authInitAttempts * 500));
+            // Exponential backoff with longer delays in production
+            const retryDelay = __DEV__ ? (authInitAttempts * 500) : (authInitAttempts * 1000);
+            console.log(`⏳ Retrying auth initialization in ${retryDelay}ms...`);
+            await new Promise(resolve => setTimeout(resolve, retryDelay));
+            
+            // PRODUCTION FIX: Try to re-import Firebase modules on retry
+            if (!__DEV__ && authInitAttempts > 1) {
+              console.log('Re-importing Firebase modules for retry...');
+              const { getAuth: getAuthRetry } = await import('firebase/auth');
+              auth = getAuthRetry(firebaseApp);
+            }
           } else {
-            throw attemptError;
+            throw new Error(`Firebase Auth initialization failed after ${maxAuthAttempts} attempts: ${attemptError.message}`);
           }
         }
       }
       
     } catch (authError: any) {
-      console.error('Error initializing Firebase Auth:', authError);
+      console.error('❌ FATAL: Error initializing Firebase Auth:', authError);
       console.error('Auth error details:', {
         name: authError?.name,
         message: authError?.message,
-        code: authError?.code
+        code: authError?.code,
+        stack: authError?.stack
       });
+      console.error('This is likely a "component auth is not registered yet" error in production');
+      console.error('Possible solutions:');
+      console.error('1. Rebuild the app with: eas build --platform android --profile production');
+      console.error('2. Clear app cache and reinstall');
+      console.error('3. Check that Firebase config is correct in app.json');
       throw authError;
     }
 

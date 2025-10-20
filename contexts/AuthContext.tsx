@@ -44,13 +44,27 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     let mounted = true;
     
     const initAuth = async () => {
-      // Set a timeout to prevent infinite loading
+      // PRODUCTION FIX: Longer timeout for production builds
+      const timeoutDuration = __DEV__ ? 5000 : 10000; // 10 seconds for production
       const timeout = setTimeout(() => {
-        console.warn('AuthContext: Initialization timeout - forcing loading to false');
+        console.warn(`AuthContext: Initialization timeout after ${timeoutDuration}ms - forcing loading to false`);
         if (mounted) {
           setLoading(false);
         }
-      }, 5000); // 5 second timeout for production
+      }, timeoutDuration);
+      
+      // CRITICAL: Pre-initialize Firebase to ensure auth component is registered
+      // This prevents "component auth is not registered yet" errors in production
+      console.log('AuthContext: Pre-initializing Firebase...');
+      try {
+        const { getFirebaseAuth } = await import('../services/firebase');
+        console.log('AuthContext: Calling getFirebaseAuth to ensure initialization...');
+        await getFirebaseAuth();
+        console.log('AuthContext: ✅ Firebase Auth pre-initialized successfully');
+      } catch (preInitError) {
+        console.error('AuthContext: ⚠️ Firebase pre-initialization failed:', preInitError);
+        console.error('AuthContext: Continuing anyway, will rely on lazy initialization');
+      }
       
       try {
         // Skip Firebase restoration on initial load - it's not critical
