@@ -105,43 +105,7 @@ npx expo start
 
 ## 🔧 Firebase Configuration
 
-### Frontend (.env file)
-```env
-# API Configuration
-API_URL=http://localhost:8000/api
 
-# Firebase Web App Configuration
-FIREBASE_API_KEY=AIzaSyBXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
-FIREBASE_AUTH_DOMAIN=healthreach-app.firebaseapp.com
-FIREBASE_PROJECT_ID=healthreach-app
-FIREBASE_STORAGE_BUCKET=healthreach-app.appspot.com
-FIREBASE_MESSAGING_SENDER_ID=123456789012
-FIREBASE_APP_ID=1:123456789012:web:abcdef1234567890abcdef
-GOOGLE_WEB_CLIENT_ID=123456789012-abcdefghijklmnopqrstuvwxyz123456.apps.googleusercontent.com
-```
-
-### Backend (.env file)
-```env
-# Laravel Configuration
-APP_NAME=HealthReach
-APP_ENV=local
-APP_KEY=base64:generated-key-here
-APP_DEBUG=true
-APP_URL=http://localhost:8000
-
-# Firebase Service Account Configuration
-FIREBASE_PROJECT_ID=healthreach-app
-FIREBASE_PRIVATE_KEY_ID=your-private-key-id
-FIREBASE_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----\nyour-private-key\n-----END PRIVATE KEY-----\n"
-FIREBASE_CLIENT_EMAIL=firebase-adminsdk-xxxxx@healthreach-app.iam.gserviceaccount.com
-FIREBASE_CLIENT_ID=your-client-id
-FIREBASE_AUTH_URI=https://accounts.google.com/o/oauth2/auth
-FIREBASE_TOKEN_URI=https://oauth2.googleapis.com/token
-FIREBASE_AUTH_PROVIDER_X509_CERT_URL=https://www.googleapis.com/oauth2/v1/certs
-FIREBASE_CLIENT_X509_CERT_URL=https://www.googleapis.com/robot/v1/metadata/x509/firebase-adminsdk-xxxxx%40healthreach-app.iam.gserviceaccount.com
-
-# FCM Configuration
-FCM_SERVER_KEY=your-fcm-server-key
 ```
 
 ### How to Get Firebase Credentials
