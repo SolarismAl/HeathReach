@@ -175,8 +175,8 @@ const initializeFirebase = async () => {
       // For React Native, we need to be more careful about auth initialization
       if (Platform.OS !== 'web') {
         console.log('Initializing Firebase Auth for React Native environment');
-        // PRODUCTION FIX: Longer delay for production builds to ensure Firebase app is fully ready
-        const delay = __DEV__ ? 500 : 3000; // 3 seconds for production
+        // OPTIMIZED: Reduced delay - Firebase should be ready faster now
+        const delay = __DEV__ ? 200 : 1000; // 1 second for production (reduced from 3s)
         console.log(`Waiting ${delay}ms for Firebase app to be ready...`);
         await new Promise(resolve => setTimeout(resolve, delay));
       }
@@ -230,8 +230,8 @@ const initializeFirebase = async () => {
           });
           
           if (authInitAttempts < maxAuthAttempts) {
-            // Exponential backoff with longer delays in production
-            const retryDelay = __DEV__ ? (authInitAttempts * 500) : (authInitAttempts * 2000); // 2s, 4s, 6s, 8s, 10s
+            // Exponential backoff with optimized delays
+            const retryDelay = __DEV__ ? (authInitAttempts * 500) : (authInitAttempts * 1000); // 1s, 2s, 3s, 4s, 5s
             console.log(`⏳ Retrying auth initialization in ${retryDelay}ms...`);
             await new Promise(resolve => setTimeout(resolve, retryDelay));
             

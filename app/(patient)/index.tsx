@@ -272,6 +272,7 @@ export default function PatientDashboard() {
         <Text style={styles.sectionTitle}>Quick Actions</Text>
         <View style={styles.quickActionsGrid}>
           <TouchableOpacity
+            key="book-appointment"
             style={styles.quickActionCard}
             onPress={() => router.push('/(patient)/book-appointment')}
           >
@@ -282,6 +283,7 @@ export default function PatientDashboard() {
           </TouchableOpacity>
 
           <TouchableOpacity
+            key="view-history"
             style={styles.quickActionCard}
             onPress={() => router.push('/(patient)/appointments')}
           >
@@ -292,6 +294,7 @@ export default function PatientDashboard() {
           </TouchableOpacity>
 
           <TouchableOpacity
+            key="notifications"
             style={styles.quickActionCard}
             onPress={() => router.push('/(patient)/notifications')}
           >
@@ -302,6 +305,7 @@ export default function PatientDashboard() {
           </TouchableOpacity>
 
           <TouchableOpacity
+            key="profile"
             style={styles.quickActionCard}
             onPress={() => router.push('/(patient)/profile')}
           >
