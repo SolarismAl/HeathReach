@@ -160,5 +160,47 @@ If you still encounter issues:
 
 ---
 
-**Last Updated:** January 20, 2025
+**Last Updated:** January 29, 2025
 **Status:** ✅ Fixed and Ready for Production Build
+
+## Latest Changes (Jan 29, 2025)
+
+### Critical Fixes Applied:
+1. **Removed synchronous Firebase initialization from `app/_layout.tsx`**
+   - Firebase no longer initializes at module load time
+   - Prevents premature auth component access
+
+2. **Increased production delays significantly:**
+   - Environment setup: 1 second (was 500ms)
+   - Auth initialization: 3 seconds (was 1 second)
+   - Retry delays: 2s, 4s, 6s, 8s, 10s (was 1s, 2s, 3s, 4s, 5s)
+   - AuthContext timeout: 15 seconds (was 8 seconds)
+
+3. **Added verification script:**
+   - Run `npm run verify-firebase` before building
+   - Checks all Firebase configuration
+   - Validates mocks and retry mechanisms
+
+4. **Created comprehensive troubleshooting guide:**
+   - See `FIREBASE_AUTH_TROUBLESHOOTING.md` for details
+   - Includes expected logs and timing
+   - Common issues and solutions
+
+### Expected Initialization Time:
+- **Production builds:** 5-10 seconds (this is normal!)
+- **Development:** 1-3 seconds
+
+### Before Building:
+```bash
+# 1. Verify configuration
+npm run verify-firebase
+
+# 2. Build preview first
+npm run build:preview
+
+# 3. Test on device
+# Wait 5-10 seconds after app launch before logging in
+
+# 4. If successful, build production
+npm run build:production
+```

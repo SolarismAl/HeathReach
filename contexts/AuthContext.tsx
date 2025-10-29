@@ -45,8 +45,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     let mounted = true;
     
     const initAuth = async () => {
-      // OPTIMIZED: Faster timeout for better UX
-      const timeoutDuration = __DEV__ ? 3000 : 8000; // 8 seconds for production (reduced from 20s)
+      // CRITICAL: Production builds need MORE time for Firebase Auth component registration
+      const timeoutDuration = __DEV__ ? 3000 : 15000; // 15 seconds for production builds
       const timeout = setTimeout(() => {
         console.warn(`AuthContext: Initialization timeout after ${timeoutDuration}ms - forcing loading to false`);
         if (mounted) {
@@ -81,7 +81,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           console.error(`AuthContext: ❌ Firebase init attempt ${initAttempts}/${maxAttempts} failed:`, preInitError?.message);
           
           if (initAttempts < maxAttempts) {
-            const retryDelay = initAttempts * 1000; // 1s, 2s (reduced from 2s, 4s)
+            const retryDelay = __DEV__ ? (initAttempts * 1000) : (initAttempts * 2000); // 2s, 4s for production
             console.log(`AuthContext: Retrying in ${retryDelay}ms...`);
             await new Promise(resolve => setTimeout(resolve, retryDelay));
           } else {

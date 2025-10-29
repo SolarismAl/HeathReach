@@ -11,8 +11,9 @@
     "lint": "expo lint",
     "postinstall": "node ./scripts/fix-tsconfig.js",
     "verify-build": "node ./scripts/verify-build-config.js",
-    "build:preview": "npm run verify-build && eas build --profile preview --platform android",
-    "build:production": "npm run verify-build && eas build --profile production --platform android"
+    "verify-firebase": "node ./scripts/verify-firebase-config.js",
+    "build:preview": "npm run verify-build && npm run verify-firebase && eas build --profile preview --platform android",
+    "build:production": "npm run verify-build && npm run verify-firebase && eas build --profile production --platform android"
   },
   "dependencies": {
     "@expo/vector-icons": "^15.0.2",
