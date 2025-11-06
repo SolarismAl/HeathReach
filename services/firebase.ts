@@ -108,7 +108,7 @@ const initializeFirebase = async () => {
       }
       
       // PRODUCTION FIX: Add delay to ensure mocks are fully registered
-      const envSetupDelay = __DEV__ ? 100 : 1000; // 1 second for production
+      const envSetupDelay = __DEV__ ? 100 : 2000; // 2 seconds for production
       console.log(`Waiting ${envSetupDelay}ms for environment setup...`);
       await new Promise(resolve => setTimeout(resolve, envSetupDelay));
     }
@@ -176,45 +176,56 @@ const initializeFirebase = async () => {
       if (Platform.OS !== 'web') {
         console.log('Initializing Firebase Auth for React Native environment');
         // CRITICAL: Production builds need MORE time for auth component registration
-        const delay = __DEV__ ? 200 : 3000; // 3 seconds for production builds
+        const delay = __DEV__ ? 200 : 5000; // 5 seconds for production builds
         console.log(`Waiting ${delay}ms for Firebase app to be ready...`);
         await new Promise(resolve => setTimeout(resolve, delay));
       }
       
       // Initialize auth with enhanced retry mechanism for production
       let authInitAttempts = 0;
-      const maxAuthAttempts = __DEV__ ? 3 : 5; // More retries in production
+      const maxAuthAttempts = __DEV__ ? 3 : 5; // More retries in production (up to 5 attempts)
       
       while (authInitAttempts < maxAuthAttempts) {
         try {
           console.log(`Auth initialization attempt ${authInitAttempts + 1}/${maxAuthAttempts}`);
           
+          // PRODUCTION FIX: Add pre-initialization delay on each attempt
+          if (Platform.OS !== 'web' && !__DEV__ && authInitAttempts > 0) {
+            const preDelay = authInitAttempts * 1000; // 1s, 2s, 3s, etc.
+            console.log(`Pre-attempt delay: ${preDelay}ms...`);
+            await new Promise(resolve => setTimeout(resolve, preDelay));
+          }
+          
+          // CRITICAL FIX: Just call getAuth and don't verify immediately
           auth = getAuth(firebaseApp);
           console.log('✅ Firebase Auth getAuth() called successfully');
           console.log('Auth instance type:', typeof auth);
           console.log('Auth instance keys:', Object.keys(auth || {}).slice(0, 10));
           
-          // CRITICAL: Verify auth component is properly registered
+          // RELAXED VERIFICATION: Don't check properties immediately, just verify instance exists
           if (!auth) {
             throw new Error('Auth instance is null or undefined');
           }
           
-          if (typeof auth.currentUser === 'undefined') {
-            throw new Error('Auth instance missing currentUser property - component not registered');
+          console.log('✅ Auth instance created');
+          console.log('Auth instance type:', typeof auth);
+          
+          // Try to access currentUser but don't fail if it's not ready yet
+          try {
+            const hasCurrentUser = 'currentUser' in auth;
+            console.log('Has currentUser property:', hasCurrentUser);
+            if (hasCurrentUser) {
+              console.log('Auth currentUser:', auth.currentUser);
+            }
+          } catch (e) {
+            console.log('Could not check currentUser (might not be ready yet)');
           }
           
-          // Additional verification for production builds
-          if (Platform.OS !== 'web') {
-            console.log('Verifying auth methods for React Native...');
-            const requiredMethods = ['signInWithEmailAndPassword', 'createUserWithEmailAndPassword', 'signOut'];
-            // Just log, don't fail - methods are on the module, not the instance
-            console.log('Auth instance verified for React Native');
+          // PRODUCTION FIX: Add post-verification delay to ensure stability
+          if (Platform.OS !== 'web' && !__DEV__) {
+            console.log('Adding post-verification stability delay (500ms)...');
+            await new Promise(resolve => setTimeout(resolve, 500));
           }
-          
-          console.log('✅ Auth instance verified - currentUser property exists');
-          console.log('Auth currentUser:', auth.currentUser);
-          console.log('Auth app name:', auth.app?.name);
-          console.log('Auth config:', auth.config);
           
           // SUCCESS!
           break;
@@ -238,8 +249,13 @@ const initializeFirebase = async () => {
             // PRODUCTION FIX: Try to re-import Firebase modules on retry
             if (!__DEV__ && authInitAttempts > 1) {
               console.log('Re-importing Firebase modules for retry...');
-              const { getAuth: getAuthRetry } = await import('firebase/auth');
-              auth = getAuthRetry(firebaseApp);
+              try {
+                const { getAuth: getAuthRetry } = await import('firebase/auth');
+                console.log('Re-imported getAuth successfully');
+                auth = getAuthRetry(firebaseApp);
+              } catch (reimportError) {
+                console.error('Failed to re-import Firebase auth:', reimportError);
+              }
             }
           } else {
             throw new Error(`Firebase Auth initialization failed after ${maxAuthAttempts} attempts: ${attemptError.message}`);

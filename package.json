@@ -12,8 +12,10 @@
     "postinstall": "node ./scripts/fix-tsconfig.js",
     "verify-build": "node ./scripts/verify-build-config.js",
     "verify-firebase": "node ./scripts/verify-firebase-config.js",
-    "build:preview": "npm run verify-build && npm run verify-firebase && eas build --profile preview --platform android",
-    "build:production": "npm run verify-build && npm run verify-firebase && eas build --profile production --platform android"
+    "test-firebase-production": "node ./scripts/test-firebase-production.js",
+    "test-connection": "node ./scripts/test-firebase-connection.js",
+    "build:preview": "npm run verify-build && npm run verify-firebase && npm run test-firebase-production && eas build --profile preview --platform android",
+    "build:production": "npm run verify-build && npm run verify-firebase && npm run test-firebase-production && eas build --profile production --platform android"
   },
   "dependencies": {
     "@expo/vector-icons": "^15.0.2",

@@ -329,45 +329,75 @@ class ApiService {
   }
 
   // Authentication methods
-  async login(idToken: string): Promise<ApiResponse<{ user: User; token: string }>> {
+  
+  /**
+   * Login with email and password (backend-first authentication)
+   * This bypasses Firebase Auth issues in React Native production builds
+   */
+  async loginWithPassword(email: string, password: string): Promise<ApiResponse<{ user: User; token: string }>> {
     try {
-      console.log('=== API SERVICE LOGIN ===');
+      console.log('=== API SERVICE LOGIN WITH PASSWORD ===');
       console.log('API Base URL:', this.baseURL);
-      console.log('Firebase ID Token (first 50 chars):', idToken.substring(0, 50) + '...');
+      console.log('Email:', email);
       
-      console.log('Making POST request to:', `${this.baseURL}/auth/login`);
-      const response = await this.api.post('/auth/login', { idToken });
+      const response = await this.api.post('/auth/login-with-password', {
+        email,
+        password
+      });
       
-      console.log('Login response status:', response.status);
-      console.log('Login response data:', response.data);
-      
-      if (response.data.success && response.data.data?.token) {
-        console.log('Login successful, storing token and user data');
+      if (response.data.success) {
+        // Store token and user data
         await this.setToken(response.data.data.token);
-        // Store the Firebase ID token for API calls
-        await this.setFirebaseIdToken(idToken);
-        // Store user data as well
         await this.setUserData(response.data.data.user);
+        
+        // Store Firebase ID token if provided (for Firebase features)
+        if (response.data.data.firebase_token) {
+          await this.setFirebaseIdToken(response.data.data.firebase_token);
+        }
+        
+        console.log('Login successful, token stored');
+        console.log('User role:', response.data.data.user.role);
       }
       
       return response.data;
     } catch (error: any) {
-      console.error('=== LOGIN ERROR ===');
-      console.error('Error type:', error.constructor.name);
-      console.error('Error message:', error.message);
-      console.error('Error code:', error.code);
-      
-      if (error.response) {
-        console.error('Response status:', error.response.status);
-        console.error('Response data:', error.response.data);
-      } else if (error.request) {
-        console.error('Request made but no response:', error.request);
-      }
-      
+      console.error('Login error:', error);
+      console.error('Error response:', error.response?.data);
       return {
         success: false,
-        message: error.response?.data?.message || error.message || 'Login failed',
-        data: { user: {} as User, token: '' }
+        message: error.response?.data?.message || 'Login failed',
+      };
+    }
+  }
+
+  async login(idToken: string): Promise<ApiResponse<{ user: User; token: string }>> {
+    try {
+      console.log('=== API SERVICE LOGIN ===');
+      console.log('API Base URL:', this.baseURL);
+      console.log('ID Token length:', idToken.length);
+      console.log('ID Token (first 50 chars):', idToken.substring(0, 50) + '...');
+      
+      const response = await this.api.post('/auth/login', { idToken });
+      
+      if (response.data.success) {
+        // Store token and user data
+        await this.setToken(response.data.data.token);
+        await this.setUserData(response.data.data.user);
+        
+        // Also store the Firebase ID token for future use
+        await this.setFirebaseIdToken(idToken);
+        
+        console.log('Login successful, token stored');
+        console.log('User role:', response.data.data.user.role);
+      }
+      
+      return response.data;
+    } catch (error: any) {
+      console.error('Login error:', error);
+      console.error('Error response:', error.response?.data);
+      return {
+        success: false,
+        message: error.response?.data?.message || 'Login failed',
       };
     }
   }

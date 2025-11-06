@@ -46,7 +46,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     
     const initAuth = async () => {
       // CRITICAL: Production builds need MORE time for Firebase Auth component registration
-      const timeoutDuration = __DEV__ ? 3000 : 15000; // 15 seconds for production builds
+      const timeoutDuration = __DEV__ ? 3000 : 40000; // 40 seconds for production builds
       const timeout = setTimeout(() => {
         console.warn(`AuthContext: Initialization timeout after ${timeoutDuration}ms - forcing loading to false`);
         if (mounted) {
@@ -164,58 +164,33 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   const signInWithEmail = async (email: string, password: string) => {
     try {
-      // CRITICAL: Check if Firebase is ready before attempting login
-      if (!firebaseReady) {
-        console.error('AuthContext: ❌ Firebase not ready yet, cannot login');
-        console.error('AuthContext: Please wait for Firebase initialization to complete');
-        throw new Error('Firebase is still initializing. Please wait a moment and try again.');
-      }
-      
       setLoading(true);
       setError(null);
+      console.log('AuthContext: Using backend-first authentication (bypasses Firebase Auth issues)');
       console.log('AuthContext: Starting email sign in for:', email);
-      console.log('AuthContext: Firebase ready status:', firebaseReady);
 
-      // Sign in with Custom Auth Service (handles both Firebase auth and backend)
-      const authResult = await CustomAuthService.signInWithEmail(email, password);
-      console.log('AuthContext: Auth result:', authResult);
+      // Use backend-first authentication (bypasses Firebase Auth component registration issues)
+      const response = await apiService.loginWithPassword(email, password);
+      console.log('AuthContext: Backend auth response:', response);
       
-      if (!authResult.success) {
-        console.error('AuthContext: Authentication failed:', authResult.error);
-        throw new Error(authResult.error || 'Authentication failed');
+      if (!response.success || !response.data) {
+        console.error('AuthContext: Authentication failed:', response.message);
+        throw new Error(response.message || 'Authentication failed');
       }
 
-      // The custom auth service already handled backend authentication
-      // Extract user data from the auth result
-      const userData = authResult.user;
-      console.log('AuthContext: Raw auth result:', authResult);
+      // Extract user data from the backend response
+      const userData = response.data.user;
       console.log('AuthContext: Setting user data:', userData);
       console.log('AuthContext: User role:', userData.role);
       console.log('AuthContext: User name:', userData.name);
-      console.log('AuthContext: User displayName:', userData.displayName);
       
       setUser(userData);
       
-      // Store user data and token (already stored by CustomAuthService)
-      // Ensure we're using the Firebase ID token for API calls
-      const firebaseIdToken = await AsyncStorage.getItem('firebase_id_token');
-      console.log('AuthContext: Firebase ID token stored:', firebaseIdToken ? 'Yes' : 'No');
-      
-      // CRITICAL: Store token in multiple keys for redundancy in production builds
-      if (authResult.user.idToken) {
-        await AsyncStorage.setItem('userToken', authResult.user.idToken);
-        await AsyncStorage.setItem('firebase_id_token', authResult.user.idToken);
-        console.log('AuthContext: Stored idToken in both userToken and firebase_id_token');
-      } else if (firebaseIdToken) {
-        // Ensure userToken is also set if we have firebase_id_token
-        await AsyncStorage.setItem('userToken', firebaseIdToken);
-        console.log('AuthContext: Synced firebase_id_token to userToken');
-      }
-      await AsyncStorage.setItem('userData', JSON.stringify(userData));
+      // Tokens are already stored by apiService.loginWithPassword
       console.log('AuthContext: Login successful, user set with role:', userData.role);
-      console.log('AuthContext: ✅ All tokens stored and ready for API calls');
+      console.log('AuthContext: ✅ Backend authentication complete - no Firebase Auth initialization needed!');
       
-      // Verify tokens are actually stored
+      // Verify tokens are stored
       const verifyUserToken = await AsyncStorage.getItem('userToken');
       const verifyFirebaseToken = await AsyncStorage.getItem('firebase_id_token');
       console.log('AuthContext: Token verification - userToken:', verifyUserToken ? 'Present' : 'MISSING');
