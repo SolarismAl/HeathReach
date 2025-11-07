@@ -28,9 +28,6 @@ export default function PatientLayout() {
         headerTitleStyle: {
           fontWeight: 'bold',
         },
-        sceneStyle: {
-          backgroundColor: colors.primary,
-        },
       }}
     >
       <Tabs.Screen

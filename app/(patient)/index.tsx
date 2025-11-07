@@ -201,10 +201,10 @@ export default function PatientDashboard() {
       {/* Welcome Section */}
       <View style={styles.welcomeSection}>
         <Text style={styles.welcomeText}>
-          Welcome back, {user?.name?.split(' ')[0] || 'Patient'}!
+          Welcome back, {user?.name || 'Patient'}!
         </Text>
         
-        {/* TOKEN DEBUG INFO - VISIBLE ON SCREEN */}
+        {/* TOKEN DEBUG INFO - VISIBLE ON SCREEN
         <View style={{
           backgroundColor: 'rgba(255, 255, 255, 0.2)',
           padding: 12,
@@ -219,7 +219,7 @@ export default function PatientDashboard() {
           }}>
             🔍 DEBUG: {tokenDebugInfo}
           </Text>
-        </View>
+        </View> */}
         
         <View style={styles.dateTimeContainer}>
           <View style={styles.dateTimeRow}>
@@ -236,7 +236,7 @@ export default function PatientDashboard() {
         </Text>
       </View>
 
-      {/* Debug Button - Remove after fixing */}
+      {/* Debug Button - Remove after fixing
       <TouchableOpacity
         style={styles.debugButton}
         onPress={async () => {
@@ -252,7 +252,7 @@ export default function PatientDashboard() {
       </TouchableOpacity>
       
       {/* Simple token check on load */}
-      <TouchableOpacity
+      {/* <TouchableOpacity
         style={[styles.debugButton, { backgroundColor: '#4A90E2', marginTop: 8 }]}
         onPress={async () => {
           const status = await DebugHelper.checkTokenStatus();
@@ -265,7 +265,7 @@ export default function PatientDashboard() {
       >
         <Ionicons name="information-circle" size={20} color="#FFF" />
         <Text style={styles.debugButtonText}>Quick Token Check</Text>
-      </TouchableOpacity>
+      </TouchableOpacity> */} 
 
       {/* Quick Actions */}
       <View style={styles.quickActionsSection}>
@@ -431,6 +431,7 @@ const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
     backgroundColor: colors.primary,
+    paddingTop: spacing.md,
   },
   container: {
     flex: 1,

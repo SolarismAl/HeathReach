@@ -339,13 +339,17 @@ class ApiService {
       console.log('=== API SERVICE LOGIN WITH PASSWORD ===');
       console.log('API Base URL:', this.baseURL);
       console.log('Email:', email);
+      console.log('Environment:', __DEV__ ? 'Development' : 'Production');
       
       const response = await this.api.post('/auth/login-with-password', {
         email,
         password
       });
       
-      if (response.data.success) {
+      console.log('Login response status:', response.status);
+      console.log('Login response success:', response.data?.success);
+      
+      if (response.data.success && response.data.data?.user) {
         // Store token and user data
         await this.setToken(response.data.data.token);
         await this.setUserData(response.data.data.user);
@@ -355,17 +359,56 @@ class ApiService {
           await this.setFirebaseIdToken(response.data.data.firebase_token);
         }
         
-        console.log('Login successful, token stored');
-        console.log('User role:', response.data.data.user.role);
+        console.log('✅ Login successful, token stored');
+        console.log('✅ User role:', response.data.data.user.role);
+        console.log('✅ User name:', response.data.data.user.name);
       }
       
       return response.data;
     } catch (error: any) {
-      console.error('Login error:', error);
-      console.error('Error response:', error.response?.data);
+      console.error('❌ LOGIN ERROR DETAILS ===');
+      console.error('Error type:', error.constructor?.name);
+      console.error('Error message:', error.message);
+      console.error('Error code:', error.code);
+      
+      // Network error
+      if (error.code === 'ECONNABORTED' || error.code === 'ERR_NETWORK') {
+        console.error('Network error - backend may be unreachable');
+        return {
+          success: false,
+          message: 'Network error. Please check your internet connection and try again.',
+        };
+      }
+      
+      // Timeout error
+      if (error.code === 'ECONNREFUSED' || error.message?.includes('timeout')) {
+        console.error('Connection timeout - backend may be slow or down');
+        return {
+          success: false,
+          message: 'Connection timeout. The server is taking too long to respond. Please try again.',
+        };
+      }
+      
+      // Backend error response
+      if (error.response) {
+        console.error('Response status:', error.response.status);
+        console.error('Response data:', error.response.data);
+        
+        const errorMessage = error.response.data?.message || 
+                           error.response.data?.error ||
+                           `Server error (${error.response.status})`;
+        
+        return {
+          success: false,
+          message: errorMessage,
+        };
+      }
+      
+      // Unknown error
+      console.error('Unknown error:', error);
       return {
         success: false,
-        message: error.response?.data?.message || 'Login failed',
+        message: error.message || 'Login failed. Please try again.',
       };
     }
   }

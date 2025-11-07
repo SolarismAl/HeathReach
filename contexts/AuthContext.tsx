@@ -45,61 +45,28 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     let mounted = true;
     
     const initAuth = async () => {
-      // CRITICAL: Production builds need MORE time for Firebase Auth component registration
-      const timeoutDuration = __DEV__ ? 3000 : 40000; // 40 seconds for production builds
-      const timeout = setTimeout(() => {
-        console.warn(`AuthContext: Initialization timeout after ${timeoutDuration}ms - forcing loading to false`);
-        if (mounted) {
-          setLoading(false);
-          setFirebaseReady(true); // Allow login attempts even if init timed out
-        }
-      }, timeoutDuration);
-      
-      // CRITICAL: Pre-initialize Firebase to ensure auth component is registered
-      // This prevents "component auth is not registered yet" errors in production
-      console.log('AuthContext: Pre-initializing Firebase...');
-      console.log('AuthContext: Attempting to initialize Firebase Auth...');
-      
-      let initAttempts = 0;
-      const maxAttempts = 3;
-      let initSuccess = false;
-      
-      while (initAttempts < maxAttempts && !initSuccess) {
+      // PRODUCTION FIX: Skip Firebase Auth initialization completely in production builds
+      // Use backend-only authentication which is reliable and already working
+      if (!__DEV__) {
+        console.log('🚀 AuthContext: PRODUCTION MODE - Skipping Firebase Auth initialization');
+        console.log('🚀 AuthContext: Using backend-only authentication for reliability');
+        setFirebaseReady(true); // Mark as ready immediately
+      } else {
+        // Development mode: Try to initialize Firebase Auth for web testing
+        console.log('AuthContext: Development mode - attempting Firebase Auth initialization');
         try {
-          initAttempts++;
-          console.log(`AuthContext: Firebase init attempt ${initAttempts}/${maxAttempts}`);
-          
           const { getFirebaseAuth } = await import('../services/firebase');
-          console.log('AuthContext: Calling getFirebaseAuth to ensure initialization...');
           const authInstance = await getFirebaseAuth();
-          console.log('AuthContext: ✅ Firebase Auth pre-initialized successfully');
-          console.log('AuthContext: Auth instance ready:', !!authInstance);
+          console.log('AuthContext: ✅ Firebase Auth initialized (dev mode)');
           setFirebaseReady(true);
-          initSuccess = true;
-          console.log('AuthContext: ✅ Firebase is now ready for login attempts');
-        } catch (preInitError: any) {
-          console.error(`AuthContext: ❌ Firebase init attempt ${initAttempts}/${maxAttempts} failed:`, preInitError?.message);
-          
-          if (initAttempts < maxAttempts) {
-            const retryDelay = __DEV__ ? (initAttempts * 1000) : (initAttempts * 2000); // 2s, 4s for production
-            console.log(`AuthContext: Retrying in ${retryDelay}ms...`);
-            await new Promise(resolve => setTimeout(resolve, retryDelay));
-          } else {
-            console.error('AuthContext: ❌ All Firebase initialization attempts failed');
-            console.error('AuthContext: Error details:', preInitError);
-            // OPTIMIZED: Still set firebaseReady to true to allow login attempts
-            setFirebaseReady(true);
-            console.log('AuthContext: Setting firebaseReady to true anyway - will retry on login');
-            // Don't throw - let the app continue and retry on login
-          }
+        } catch (devError: any) {
+          console.warn('AuthContext: Firebase Auth init failed in dev mode:', devError?.message);
+          console.log('AuthContext: Continuing with backend-only auth');
+          setFirebaseReady(true);
         }
       }
       
       try {
-        // Skip Firebase restoration on initial load - it's not critical
-        // Firebase will be initialized lazily when user tries to sign in
-        console.log('AuthContext: Skipping Firebase restoration on initial load for faster startup');
-        
         // Check for stored token and user data
         const token = await apiService.getStoredToken();
         const userData = await apiService.getStoredUserData();
@@ -142,7 +109,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         setUser(null);
         setFirebaseUser(null);
       } finally {
-        clearTimeout(timeout);
         if (mounted) {
           setLoading(false);
         }

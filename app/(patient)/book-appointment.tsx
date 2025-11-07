@@ -19,7 +19,7 @@ import { Calendar } from 'react-native-calendars';
 import apiService from '../../services/api';
 import notificationService from '../../services/notifications';
 import FirebaseAuthService from '../../services/firebase';
-import { colors } from '../../styles/neumorphism';
+import { colors, spacing } from '../../styles/neumorphism';
 import { useAuth } from '../../contexts/AuthContext';
 import { HealthCenter, Service, CreateAppointmentData } from '../../types';
 
@@ -626,7 +626,8 @@ export default function BookAppointmentScreen() {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: colors.primary,
+    backgroundColor: '#F8F9FA',
+    paddingTop: spacing.md,
   },
   container: {
     flex: 1,

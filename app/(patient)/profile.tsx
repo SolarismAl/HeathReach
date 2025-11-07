@@ -193,27 +193,15 @@ export default function ProfileScreen() {
             try {
               console.log('Patient Profile: Starting logout process...');
               
-              // Show logging out message
-              Alert.alert(
-                '⏳ Logging Out',
-                'Please wait...',
-                [],
-                { cancelable: false }
-              );
-              
               await signOut();
               console.log('Patient Profile: Logout successful, navigating to landing page');
               
-              // Use setTimeout to ensure state updates are processed
-              setTimeout(() => {
-                router.replace('/');
-              }, 100);
+              // Navigate to landing page and reload
+              router.replace('/');
             } catch (error) {
               console.error('Patient Profile: Logout error:', error);
-              // Even if there's an error, still navigate away
-              setTimeout(() => {
-                router.replace('/');
-              }, 100);
+              // Even if there's an error, still navigate to landing page
+              router.replace('/');
             }
           },
         },
@@ -732,6 +720,7 @@ const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
     backgroundColor: colors.primary,
+    paddingTop: spacing.md,
   },
   container: {
     flex: 1,

@@ -129,7 +129,8 @@ export default function AppointmentHistoryScreen() {
   };
 
   const canCancelAppointment = (appointment: Appointment) => {
-    return appointment.status === 'pending' || appointment.status === 'confirmed';
+    // Only allow cancellation for pending appointments, not confirmed or approved ones
+    return appointment.status === 'pending';
   };
 
   const renderAppointment = ({ item }: { item: Appointment }) => {
@@ -298,7 +299,8 @@ export default function AppointmentHistoryScreen() {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: colors.primary,
+    backgroundColor: '#FFFFFF',
+    paddingTop: spacing.md,
   },
   container: {
     flex: 1,
