@@ -92,9 +92,13 @@ export default function RegisterScreen() {
       
       await signUp(registrationData);
       
-      showSuccess('Account created successfully!');
-      console.log('Registration successful!');
-      // Don't navigate here - let AuthContext handle it
+      showSuccess('Account created successfully! Please sign in.');
+      console.log('Registration successful! Redirecting to login...');
+      
+      // Navigate to login page after successful registration
+      setTimeout(() => {
+        router.push('/auth');
+      }, 1500); // Small delay to show success message
     } catch (error: any) {
       console.error('Registration error:', error);
       showError(error.message || 'Registration failed');
@@ -174,52 +178,6 @@ export default function RegisterScreen() {
               />
             </View>
 
-            {/* Role Selection */}
-            <View style={styles.roleContainer}>
-              <Text style={styles.roleLabel}>I am a:</Text>
-              <View style={styles.roleButtons}>
-                <TouchableOpacity
-                  style={[
-                    styles.roleButton,
-                    formData.role === 'patient' && styles.roleButtonActive
-                  ]}
-                  onPress={() => handleInputChange('role', 'patient')}
-                >
-                  <Ionicons 
-                    name="person" 
-                    size={20} 
-                    color={formData.role === 'patient' ? '#FFFFFF' : '#4A90E2'} 
-                  />
-                  <Text style={[
-                    styles.roleButtonText,
-                    formData.role === 'patient' && styles.roleButtonTextActive
-                  ]}>
-                    Patient
-                  </Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity
-                  style={[
-                    styles.roleButton,
-                    formData.role === 'health_worker' && styles.roleButtonActive
-                  ]}
-                  onPress={() => handleInputChange('role', 'health_worker')}
-                >
-                  <Ionicons 
-                    name="medical" 
-                    size={20} 
-                    color={formData.role === 'health_worker' ? '#FFFFFF' : '#4A90E2'} 
-                  />
-                  <Text style={[
-                    styles.roleButtonText,
-                    formData.role === 'health_worker' && styles.roleButtonTextActive
-                  ]}>
-                    Health Worker
-                  </Text>
-                </TouchableOpacity>
-              </View>
-            </View>
-
             <View style={styles.inputContainer}>
               <Ionicons name="lock-closed" size={20} color="#666" style={styles.inputIcon} />
               <TextInput
@@ -274,13 +232,13 @@ export default function RegisterScreen() {
               </Text>
             </TouchableOpacity>
 
-            <View style={styles.divider}>
+            {/* <View style={styles.divider}>
               <View style={styles.dividerLine} />
               <Text style={styles.dividerText}>OR</Text>
               <View style={styles.dividerLine} />
-            </View>
+            </View> */}
 
-            <TouchableOpacity
+            {/* <TouchableOpacity
               style={[styles.googleButton, loading && styles.googleButtonDisabled]}
               onPress={() => setShowGoogleModal(true)}
               disabled={loading}
@@ -289,7 +247,7 @@ export default function RegisterScreen() {
               <Text style={styles.googleButtonText}>
                 {loading ? 'Creating Account...' : 'Sign up with Google'}
               </Text>
-            </TouchableOpacity>
+            </TouchableOpacity> */}
           </View>
 
           {/* Footer */}
@@ -302,11 +260,11 @@ export default function RegisterScreen() {
         </ScrollView>
       </KeyboardAvoidingView>
       
-      <GoogleSignInModal
+      {/* <GoogleSignInModal
         visible={showGoogleModal}
         onClose={() => setShowGoogleModal(false)}
         mode="signup"
-      />
+      /> */}
       
       <Toast
         visible={toast.visible}
@@ -388,44 +346,6 @@ const styles = StyleSheet.create({
   },
   eyeIcon: {
     padding: spacing.xs,
-  },
-  roleContainer: {
-    marginBottom: spacing.lg,
-  },
-  roleLabel: {
-    ...typography.body1,
-    fontWeight: '600',
-    color: '#FFFFFF',
-    marginBottom: spacing.md,
-  },
-  roleButtons: {
-    flexDirection: 'row',
-    gap: spacing.md,
-  },
-  roleButton: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: spacing.md,
-    paddingHorizontal: spacing.md,
-    borderRadius: borderRadius.md,
-    backgroundColor: '#FFFFFF',
-    ...shadows.elevated,
-  },
-  roleButtonActive: {
-    backgroundColor: 'rgba(255, 255, 255, 0.3)',
-    borderWidth: 2,
-    borderColor: '#FFFFFF',
-  },
-  roleButtonText: {
-    marginLeft: spacing.sm,
-    ...typography.body2,
-    fontWeight: '600',
-    color: colors.primary,
-  },
-  roleButtonTextActive: {
-    color: '#FFFFFF',
   },
   registerButton: {
     backgroundColor: '#FFFFFF',

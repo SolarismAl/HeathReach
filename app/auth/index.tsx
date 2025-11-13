@@ -161,7 +161,7 @@ export default function LoginScreen() {
               </Text>
             </TouchableOpacity>
 
-            <View style={styles.divider}>
+            {/* <View style={styles.divider}>
               <View style={styles.dividerLine} />
               <Text style={styles.dividerText}>OR</Text>
               <View style={styles.dividerLine} />
@@ -176,7 +176,7 @@ export default function LoginScreen() {
               <Text style={styles.googleButtonText}>
                 {googleLoading ? 'Connecting...' : 'Continue with Google'}
               </Text>
-            </TouchableOpacity>
+            </TouchableOpacity> */}
 
             <TouchableOpacity 
               style={styles.forgotPassword}
@@ -196,11 +196,11 @@ export default function LoginScreen() {
         </ScrollView>
       </KeyboardAvoidingView>
       
-      <GoogleSignInModal
+      {/* <GoogleSignInModal
         visible={showGoogleModal}
         onClose={handleGoogleModalClose}
         mode="signin"
-      />
+      /> */}
       
       <Toast
         visible={toast.visible}
