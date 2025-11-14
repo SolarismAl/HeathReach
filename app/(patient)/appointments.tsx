@@ -204,7 +204,7 @@ export default function AppointmentHistoryScreen() {
         )}
       </View>
 
-      {canCancelAppointment(item) && (
+      {/* {canCancelAppointment(item) && (
         <View style={styles.appointmentActions}>
           <TouchableOpacity
             style={styles.cancelButton}
@@ -214,7 +214,7 @@ export default function AppointmentHistoryScreen() {
             <Text style={styles.cancelButtonText}>Cancel</Text>
           </TouchableOpacity>
         </View>
-      )}
+      )} */}
     </View>
     );
   };
